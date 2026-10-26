@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MSP Door-to-Door Solicitor Data Aggregator & Scraper Studio</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d',
+            },
+            accent: {
+              500: '#3b82f6',
+              600: '#2563eb',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar styling for technical dashboard feel */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .code-font {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+  </style>
+</head>
+<body class="h-full font-sans antialiased bg-slate-950 text-slate-100 flex flex-col md:flex-row overflow-hidden">
+
+  <!-- Sidebar Navigation -->
+  <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+    <!-- Header/Logo -->
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-slate-100 text-sm leading-tight">MSP Solicitor Tracker</h1>
+          <span class="text-xs text-slate-400">Metro Permit Automation</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="p-3 space-y-1 flex-1 overflow-y-auto">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-slate-800 text-emerald-400">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        <span>Live Feed & Dashboard</span>
+      </button>
+
+      <button onclick="switchTab('keywords')" id="nav-keywords" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-colors">
+        <i data-lucide="filter" class="w-4 h-4"></i>
+        <span>Keyword Rules Engine</span>
+        <span class="ml-auto bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded-full border border-emerald-500/30" id="kw-count-badge">4</span>
+      </button>
+
+      <button onclick="switchTab('configurator')" id="nav-configurator" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-colors">
+        <i data-lucide="map-pin" class="w-4 h-4"></i>
+        <span>City Target Endpoints</span>
+        <span class="ml-auto bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded-full border border-slate-700" id="city-count-badge">8</span>
+      </button>
+
+      <button onclick="switchTab('generators')" id="nav-generators" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-colors">
+        <i data-lucide="code-2" class="w-4 h-4"></i>
+        <span>Scraper & Cron Generator</span>
+      </button>
+
+      <button onclick="switchTab('mgdpa')" id="nav-mgdpa" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-colors">
+        <i data-lucide="file-text" class="w-4 h-4"></i>
+        <span>MGDPA & Data Guides</span>
+      </button>
+    </nav>
+
+    <!-- System Status Box -->
+    <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+      <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+        <span class="flex items-center space-x-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Aggregator Status</span>
+        </span>
+        <span class="text-emerald-400 font-mono">READY</span>
+      </div>
+      <div class="text-xs text-slate-500 space-y-1">
+        <div>Target Region: Twin Cities Metro</div>
+        <div>Active Targets: 8 Municipalities</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+    
+    <!-- Top Bar -->
+    <header class="h-16 border-b border-slate-800 bg-slate-900/40 px-6 flex items-center justify-between shrink-0">
+      <div class="flex items-center space-x-4">
+        <h2 id="page-title" class="text-lg font-semibold text-slate-100">Aggregated Solicitor Dashboard</h2>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 flex items-center gap-1.5">
+          <i data-lucide="clock" class="w-3 h-3"></i> Auto-Sync: 04:00 AM CST
+        </span>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="flex items-center space-x-3">
+        <button onclick="simulateScrapeRun()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center space-x-2 transition-all shadow-lg shadow-emerald-900/30">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="refresh-icon"></i>
+          <span>Run Scraper Refresh</span>
+        </button>
+        <div class="flex rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
+          <button onclick="exportData('csv')" class="px-3 py-1.5 text-slate-200 hover:bg-slate-700 text-xs font-medium flex items-center space-x-1 transition-colors border-r border-slate-700">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>CSV</span>
+          </button>
+          <button onclick="exportData('json')" class="px-3 py-1.5 text-slate-200 hover:bg-slate-700 text-xs font-medium flex items-center space-x-1 transition-colors">
+            <i data-lucide="file-json" class="w-3.5 h-3.5"></i>
+            <span>JSON</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dynamic Content Container -->
+    <div class="flex-1 overflow-y-auto p-6 space-y-6" id="main-container">
+
+      <!-- TAB 1: DASHBOARD VIEW -->
+      <div id="tab-dashboard" class="space-y-6">
+        
+        <!-- Summary Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Permits</p>
+              <p class="text-2xl font-bold text-slate-100 mt-1" id="stat-total">0</p>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-800 text-slate-400">
+              <i data-lucide="badge-check" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900 border border-emerald-500/30 bg-emerald-950/10 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-emerald-400 uppercase tracking-wider">Target Exterior Leads</p>
+              <p class="text-2xl font-bold text-emerald-400 mt-1" id="stat-exterior-matched">0</p>
+            </div>
+            <div class="p-3 rounded-lg bg-emerald-500/10 text-emerald-400">
+              <i data-lucide="home" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Monitored Suburbs</p>
+              <p class="text-2xl font-bold text-slate-100 mt-1" id="stat-cities">8</p>
+            </div>
+            <div class="p-3 rounded-lg bg-blue-500/10 text-blue-400">
+              <i data-lucide="building-2" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Expiring (&lt;14 Days)</p>
+              <p class="text-2xl font-bold text-amber-400 mt-1" id="stat-expiring">0</p>
+            </div>
+            <div class="p-3 rounded-lg bg-amber-500/10 text-amber-400">
+              <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Unique Companies</p>
+              <p class="text-2xl font-bold text-indigo-400 mt-1" id="stat-companies">0</p>
+            </div>
+            <div class="p-3 rounded-lg bg-indigo-500/10 text-indigo-400">
+              <i data-lucide="briefcase" class="w-6 h-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 p-5 rounded-xl bg-slate-900 border border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center justify-between">
+              <span>Exterior Permits by Municipality</span>
+              <span class="text-xs font-normal text-slate-400">MSP Metro Coverage</span>
+            </h3>
+            <div class="h-56 relative">
+              <canvas id="chart-city-breakdown"></canvas>
+            </div>
+          </div>
+
+          <div class="p-5 rounded-xl bg-slate-900 border border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-200 mb-4">Top Exterior Contractors</h3>
+            <div class="h-56 relative">
+              <canvas id="chart-companies-breakdown"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter and Search Toolbar -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+          <div class="flex flex-col lg:flex-row gap-3 items-center justify-between">
+            <!-- Left Controls: Toggle + Search -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+              <!-- Checkbox Toggle for Keyword Filter -->
+              <label class="flex items-center space-x-2 bg-slate-950 border border-slate-800 px-3 py-2 rounded-lg cursor-pointer hover:border-slate-700 transition-colors w-full sm:w-auto">
+                <input type="checkbox" id="toggle-exterior-filter" checked onchange="applyFilters()" class="w-4 h-4 rounded border-slate-700 text-emerald-600 focus:ring-emerald-500 bg-slate-900">
+                <span class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+                  <i data-lucide="filter" class="w-3.5 h-3.5"></i> Strict Keyword Filter
+                </span>
+              </label>
+
+              <!-- Search input -->
+              <div class="relative w-full sm:w-72">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
+                <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search company, solicitor, or ID..." class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+              </div>
+            </div>
+
+            <!-- Right Controls: City + Status Filters -->
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+              <!-- City Select Filter -->
+              <select id="filter-city" onchange="applyFilters()" class="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                <option value="ALL">All Cities</option>
+              </select>
+
+              <!-- Status Filter -->
+              <select id="filter-status" onchange="applyFilters()" class="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                <option value="ALL">All Statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="EXPIRING">Expiring Soon (&lt;14 Days)</option>
+                <option value="EXPIRED">Expired</option>
+              </select>
+
+              <button onclick="resetFilters()" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs transition-colors flex items-center space-x-1">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Keywords Pill Bar -->
+          <div class="pt-2 border-t border-slate-800/80 flex items-center gap-2 flex-wrap text-xs">
+            <span class="text-slate-400 font-medium text-[11px]">Active Filter Keywords:</span>
+            <div id="active-keywords-pills" class="flex flex-wrap items-center gap-1.5">
+              <!-- Rendered via JS -->
+            </div>
+            <button onclick="switchTab('keywords')" class="text-[11px] text-emerald-400 hover:underline ml-auto flex items-center gap-1">
+              <i data-lucide="settings" class="w-3 h-3"></i> Manage Keywords
+            </button>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950/80 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
+                <tr>
+                  <th class="py-3.5 px-4">City</th>
+                  <th class="py-3.5 px-4">Company Name</th>
+                  <th class="py-3.5 px-4">Keyword Match</th>
+                  <th class="py-3.5 px-4">Solicitor / Rep</th>
+                  <th class="py-3.5 px-4">Permit ID</th>
+                  <th class="py-3.5 px-4">Issue Date</th>
+                  <th class="py-3.5 px-4">Expiration Date</th>
+                  <th class="py-3.5 px-4 text-center">Status</th>
+                  <th class="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="solicitor-table-body" class="divide-y divide-slate-800/60">
+                <!-- Javascript will insert table rows here -->
+              </tbody>
+            </table>
+          </div>
+          <!-- Pagination / Info footer -->
+          <div class="p-3 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between text-xs text-slate-400">
+            <span id="table-record-count">Showing 0 entries</span>
+            <span>Data filtered strictly via Minnesota Municipal Public License Registries</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 2: KEYWORD RULES ENGINE -->
+      <div id="tab-keywords" class="space-y-6 hidden">
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <h3 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+                <i data-lucide="filter" class="w-5 h-5 text-emerald-400"></i> Target Exterior Keywords Configuration
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">
+                Define case-insensitive substrings used to identify exterior contracting, roofing, window, and siding door-to-door solicitors.
+              </p>
+            </div>
+            <button onclick="resetKeywordsToDefault()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1.5 self-start">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Restore Defaults
+            </button>
+          </div>
+
+          <!-- Add New Keyword Form -->
+          <div class="flex flex-col sm:flex-row items-center gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <div class="relative flex-1 w-full">
+              <i data-lucide="tag" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
+              <input type="text" id="input-new-keyword" placeholder="Add custom keyword (e.g., gutter, solar, paving, masonry)" class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+            </div>
+            <button onclick="addCustomKeyword()" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0">
+              <i data-lucide="plus" class="w-4 h-4"></i> Add Keyword Tag
+            </button>
+          </div>
+
+          <!-- Keywords List -->
+          <div>
+            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Active Target Tags</h4>
+            <div id="keywords-tag-container" class="flex flex-wrap gap-2">
+              <!-- Dynamically populated tags -->
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs text-slate-300 space-y-2">
+            <div class="font-semibold text-emerald-400 flex items-center gap-2">
+              <i data-lucide="code" class="w-4 h-4"></i> Automatic Code Sync
+            </div>
+            <p>
+              Updating keywords here automatically updates the filter logic in the generated Python script, Node.js script, and live aggregated dashboard table.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: CITY SCRAPING CONFIGURATOR -->
+      <div id="tab-configurator" class="space-y-6 hidden">
+        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800">
+          <div>
+            <h3 class="text-base font-semibold text-slate-100">Municipal Scraping Profiles</h3>
+            <p class="text-xs text-slate-400">Pre-configured target strategies for Twin Cities suburbs (HTML Tables vs PDF Parse)</p>
+          </div>
+          <button onclick="openAddCityModal()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center space-x-1.5">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Add City Endpoint</span>
+          </button>
+        </div>
+
+        <div id="city-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically Generated City Target Cards -->
+        </div>
+      </div>
+
+      <!-- TAB 3: SCRAPER & CRON CODE GENERATOR -->
+      <div id="tab-generators" class="space-y-6 hidden">
+        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <h3 class="text-base font-semibold text-slate-100">Daily Web Scraper Automation Scripts</h3>
+              <p class="text-xs text-slate-400">Select language & architecture to generate production-ready scraping code for MSP city portals.</p>
+            </div>
+            
+            <!-- Language Picker -->
+            <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+              <button onclick="switchGeneratorLang('python')" id="btn-lang-python" class="px-3 py-1 rounded text-xs font-medium bg-emerald-600 text-white">Python (pdfplumber + BS4)</button>
+              <button onclick="switchGeneratorLang('node')" id="btn-lang-node" class="px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200">Node.js (Playwright + pdf-parse)</button>
+              <button onclick="switchGeneratorLang('github')" id="btn-lang-github" class="px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200">GitHub Actions (Daily Cron)</button>
+            </div>
+          </div>
+
+          <!-- Code Display Box -->
+          <div class="relative">
+            <button onclick="copyCodeSnippet()" class="absolute right-3 top-3 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 flex items-center space-x-1 z-10 transition-colors">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="copy-btn-text">Copy Code</span>
+            </button>
+            <pre class="bg-slate-950 p-4 rounded-xl border border-slate-800 overflow-x-auto code-font text-xs text-emerald-400 leading-relaxed max-h-[500px]" id="code-output-block">
+              <!-- Code block generated by JS -->
+            </pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: MGDPA & LEGAL DATA GUIDES -->
+      <div id="tab-mgdpa" class="space-y-6 hidden">
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4">
+          <div class="flex items-center space-x-3 text-emerald-400">
+            <i data-lucide="scale" class="w-6 h-6"></i>
+            <h3 class="text-base font-semibold text-slate-100">Minnesota Government Data Practices Act (MGDPA) Guide</h3>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Door-to-door solicitor registration and peddler permits are governed under Minnesota Statute Chapter 13 (MGDPA). Here is how data collection works for local software developers:
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div class="p-4 rounded-lg bg-slate-950 border border-slate-800">
+              <h4 class="text-xs font-bold text-slate-200 mb-2 flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i> Public Data (Scrapable / Requestable)
+              </h4>
+              <ul class="text-xs text-slate-400 space-y-1.5 list-disc pl-4">
+                <li>Company / Employer Name and Address</li>
+                <li>Solicitor / Sales Rep Name (Issued Badge Name)</li>
+                <li>Permit Number, Issue Date, and Expiration Date</li>
+                <li>Approved Products/Services Description</li>
+                <li>Approved door-to-door operation area or dates</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-lg bg-slate-950 border border-slate-800">
+              <h4 class="text-xs font-bold text-slate-200 mb-2 flex items-center gap-2">
+                <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i> Private Data (Redacted by Cities)
+              </h4>
+              <ul class="text-xs text-slate-400 space-y-1.5 list-disc pl-4">
+                <li>Applicant Drivers License / State ID Number</li>
+                <li>Personal Home Address, Phone Number, and Personal Email</li>
+                <li>Background Check Results / Criminal Records</li>
+                <li>Social Security Numbers</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-lg bg-blue-950/30 border border-blue-800/40 text-xs text-blue-200 space-y-2">
+            <div class="font-semibold flex items-center gap-2">
+              <i data-lucide="info" class="w-4 h-4 text-blue-400"></i> Requesting Non-Published City Records
+            </div>
+            <p>
+              If a suburb (e.g., Maple Grove, Plymouth, Eagan) does not publish a live PDF or web directory, you can submit an automated MGDPA public data request to the City Clerk or Police Records division requesting the "Active Commercial Solicitor & Peddler License Roster".
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal: Add Custom City Target -->
+  <div id="modal-add-city" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-semibold text-slate-100 flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i> Add City Target Profile
+        </h3>
+        <button onclick="closeAddCityModal()" class="text-slate-500 hover:text-slate-300">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">City / Municipality Name</label>
+          <input type="text" id="new-city-name" placeholder="e.g. Edina" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Target Endpoint URL</label>
+          <input type="text" id="new-city-url" placeholder="https://www.cityname.gov/licensing/solicitors" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Document / Format Type</label>
+          <select id="new-city-format" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-emerald-500">
+            <option value="PDF Document">PDF Document (pdfplumber parser)</option>
+            <option value="HTML Directory Table">HTML Directory Table (BeautifulSoup)</option>
+            <option value="Open Data Portal API">Open Data Portal API (JSON/REST)</option>
+            <option value="City Clerk Data Request">City Clerk Data Request (Manual Upload)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Selector / Parsing Notes</label>
+          <textarea id="new-city-notes" rows="2" placeholder="e.g., Looks for link containing 'Solicitor' and parses table columns: Name, Company, Expiration." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end space-x-2 pt-2">
+        <button onclick="closeAddCityModal()" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs">Cancel</button>
+        <button onclick="saveNewCity()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic JavaScript -->
+  <script>
+    // Configurable Target Exterior Keywords
+    let targetKeywords = ["window", "roofing", "exterior", "siding"];
+
+    // Initial Dataset - Expanded with exterior contractor records and non-exterior baseline entries
+    let solicitorData = [
+      { id: "CR-2026-104", city: "Coon Rapids", company: "Apex Roofing & Solar", solicitor: "Marcus Vance", issueDate: "2026-03-10", expireDate: "2026-11-15", status: "ACTIVE" },
+      { id: "RM-8842", city: "Rosemount", company: "Aptive Pest Control", solicitor: "Brandon Lee", issueDate: "2026-04-01", expireDate: "2026-10-31", status: "ACTIVE" },
+      { id: "AND-9912", city: "Andover", company: "Midwest Window & Door", solicitor: "Derek Miller", issueDate: "2026-02-15", expireDate: "2026-11-01", status: "ACTIVE" },
+      { id: "WB-2026-09", city: "Woodbury", company: "Twin Cities Exterior Solutions", solicitor: "Sarah Jenkins", issueDate: "2026-05-12", expireDate: "2026-10-15", status: "EXPIRING" },
+      { id: "BL-5510", city: "Blaine", company: "Vivint Smart Home", solicitor: "Tyler Olson", issueDate: "2026-01-20", expireDate: "2026-12-31", status: "ACTIVE" },
+      { id: "EAG-4110", city: "Eagan", company: "Summit Exterior Group", solicitor: "Rachel Adams", issueDate: "2026-03-18", expireDate: "2026-10-28", status: "EXPIRING" },
+      { id: "PLY-3001", city: "Plymouth", company: "Renewal by Andersen Windows", solicitor: "Jason Thorne", issueDate: "2026-03-01", expireDate: "2026-09-30", status: "EXPIRED" },
+      { id: "MG-9081", city: "Maple Grove", company: "EcoShield Pest Solutions", solicitor: "Kevin Wright", issueDate: "2026-04-18", expireDate: "2026-11-30", status: "ACTIVE" },
+      { id: "CR-2026-210", city: "Coon Rapids", company: "All-Weather Siding & Gutters", solicitor: "Zachary Taylor", issueDate: "2026-05-01", expireDate: "2026-10-30", status: "ACTIVE" },
+      { id: "RM-9104", city: "Rosemount", company: "Capital Roofing & Construction", solicitor: "David Smith", issueDate: "2026-06-10", expireDate: "2026-11-15", status: "ACTIVE" },
+      { id: "WB-2026-88", city: "Woodbury", company: "North Star Window Crafters", solicitor: "Hannah Peterson", issueDate: "2026-02-10", expireDate: "2026-11-10", status: "ACTIVE" },
+      { id: "BL-5590", city: "Blaine", company: "Great Lakes Roofing & Siding", solicitor: "Eric Lindqvist", issueDate: "2026-04-05", expireDate: "2026-10-20", status: "EXPIRING" }
+    ];
+
+    // City Target Config Profiles
+    let cityTargets = [
+      {
+        name: "Coon Rapids",
+        url: "https://www.coonrapidsmn.gov/1165/Current-Solicitor-Peddler-Lists",
+        format: "PDF Document",
+        status: "Online Directory",
+        method: "Downloads weekly PDF roster, extracts table via pdfplumber.",
+        selector: "a[href*='Solicitor']"
+      },
+      {
+        name: "Rosemount",
+        url: "https://www.rosemountmn.gov/303/Door-to-Door-Solicitors",
+        format: "HTML Directory Table",
+        status: "Online Page",
+        method: "Scrapes HTML table directly with BeautifulSoup.",
+        selector: "table.data-table tbody tr"
+      },
+      {
+        name: "Andover",
+        url: "https://www.andovermn.gov/DocumentCenter/View/3423/Licensed-Solicitor-List",
+        format: "PDF Document",
+        status: "Online PDF Link",
+        method: "Direct PDF download from DocumentCenter with regex pattern parsing.",
+        selector: "DocumentCenter View PDF link"
+      },
+      {
+        name: "Woodbury",
+        url: "https://www.woodburymn.gov/350/Peddlers-Solicitors",
+        format: "HTML Directory Table",
+        status: "Online Page",
+        method: "Extracts Active License List HTML view.",
+        selector: "div.content-body table"
+      },
+      {
+        name: "Blaine",
+        url: "https://www.blainemn.gov/324/Solicitors-Peddlers",
+        format: "PDF Document",
+        status: "Online Directory",
+        method: "Fetches PDF attachments on city licensing portal.",
+        selector: "a.hyperlink-pdf"
+      },
+      {
+        name: "Eagan",
+        url: "https://www.cityofeagan.com/solicitors",
+        format: "City Clerk Portal",
+        status: "MGDPA Request / Portal",
+        method: "Queries City Clerk data endpoint or parses weekly permit log.",
+        selector: "api/permits/solicitors"
+      },
+      {
+        name: "Plymouth",
+        url: "https://www.plymouthmn.gov/departments/public-safety/solicitors",
+        format: "HTML Directory Table",
+        status: "Online Page",
+        method: "Parses active approved company badges.",
+        selector: ".solicitor-list-item"
+      },
+      {
+        name: "Maple Grove",
+        url: "https://www.maplegrovemn.gov/435/Peddlers-and-solicitors",
+        format: "PDF Document",
+        status: "Online PDF Link",
+        method: "Scrapes latest active permit PDF uploaded by Police Dept.",
+        selector: "a[href$='.pdf']"
+      }
+    ];
+
+    let cityChart = null;
+    let companyChart = null;
+    let currentCodeLang = 'python';
+
+    // Helper: Check if company matches active keywords
+    function getMatchedKeyword(companyName) {
+      if (!companyName) return null;
+      const lower = companyName.toLowerCase();
+      for (let kw of targetKeywords) {
+        if (lower.includes(kw.toLowerCase())) {
+          return kw.toLowerCase();
+        }
+      }
+      return null;
+    }
+
+    // On Page Load Initialization
+    window.onload = function() {
+      lucide.createIcons();
+      populateCityFilter();
+      renderKeywordTags();
+      applyFilters();
+      renderCityCards();
+      initCharts();
+      updateCodeSnippet();
+    };
+
+    // Tab Switcher
+    function switchTab(tabId) {
+      const tabs = ['dashboard', 'keywords', 'configurator', 'generators', 'mgdpa'];
+      tabs.forEach(id => {
+        document.getElementById(`tab-${id}`).classList.add('hidden');
+        document.getElementById(`nav-${id}`).classList.remove('bg-slate-800', 'text-emerald-400');
+        document.getElementById(`nav-${id}`).classList.add('text-slate-400');
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      activeNav.classList.add('bg-slate-800', 'text-emerald-400');
+      activeNav.classList.remove('text-slate-400');
+
+      // Update Header Title
+      const titleMap = {
+        'dashboard': 'Aggregated Solicitor Dashboard',
+        'keywords': 'Target Exterior Keywords & Rules Engine',
+        'configurator': 'Municipal Scraping Endpoints & Targets',
+        'generators': 'Daily Scraper & GitHub Actions Generator',
+        'mgdpa': 'Minnesota Data Practices (MGDPA) Guide'
+      };
+      document.getElementById('page-title').innerText = titleMap[tabId];
+    }
+
+    // Keyword Management Logic
+    function renderKeywordTags() {
+      const container = document.getElementById('keywords-tag-container');
+      const pillsContainer = document.getElementById('active-keywords-pills');
+      container.innerHTML = '';
+      pillsContainer.innerHTML = '';
+
+      targetKeywords.forEach((kw, index) => {
+        // Tag in Settings Tab
+        const tag = document.createElement('div');
+        tag.className = "flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono";
+        tag.innerHTML = `
+          <span>"${kw}"</span>
+          <button onclick="removeKeyword(${index})" class="text-emerald-400/60 hover:text-rose-400 ml-1 transition-colors">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+        container.appendChild(tag);
+
+        // Pill on Dashboard Toolbar
+        const pill = document.createElement('span');
+        pill.className = "px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-emerald-400 font-mono text-[10px]";
+        pill.innerText = `"${kw}"`;
+        pillsContainer.appendChild(pill);
+      });
+
+      document.getElementById('kw-count-badge').innerText = targetKeywords.length;
+      lucide.createIcons();
+    }
+
+    function addCustomKeyword() {
+      const input = document.getElementById('input-new-keyword');
+      const val = input.value.trim().toLowerCase();
+      if (val && !targetKeywords.includes(val)) {
+        targetKeywords.push(val);
+        input.value = '';
+        renderKeywordTags();
+        applyFilters();
+        updateCodeSnippet();
+      }
+    }
+
+    function removeKeyword(index) {
+      if (targetKeywords.length <= 1) {
+        alert("At least one target keyword is required.");
+        return;
+      }
+      targetKeywords.splice(index, 1);
+      renderKeywordTags();
+      applyFilters();
+      updateCodeSnippet();
+    }
+
+    function resetKeywordsToDefault() {
+      targetKeywords = ["window", "roofing", "exterior", "siding"];
+      renderKeywordTags();
+      applyFilters();
+      updateCodeSnippet();
+    }
+
+    // Populate City Dropdown Filter
+    function populateCityFilter() {
+      const citySelect = document.getElementById('filter-city');
+      const cities = [...new Set(cityTargets.map(c => c.name))].sort();
+      citySelect.innerHTML = '<option value="ALL">All Cities</option>';
+      cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+      document.getElementById('city-count-badge').innerText = cityTargets.length;
+    }
+
+    // Render Table Data
+    function renderDashboardTable(data) {
+      const tbody = document.getElementById('solicitor-table-body');
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-8 text-slate-500">
+              No exterior contractor permits found matching the current keyword rules.
+            </td>
+          </tr>
+        `;
+        document.getElementById('table-record-count').innerText = "Showing 0 entries";
+        calculateAndRenderStats(data, 0);
+        return;
+      }
+
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+
+        const matchedKw = getMatchedKeyword(item.company);
+        const matchBadge = matchedKw 
+          ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-fit"><i data-lucide="tag" class="w-3 h-3"></i> ${matchedKw}</span>`
+          : `<span class="text-slate-600 text-[10px]">—</span>`;
+
+        let statusBadge = '';
+        if (item.status === 'ACTIVE') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ACTIVE</span>`;
+        } else if (item.status === 'EXPIRING') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">EXPIRING</span>`;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">EXPIRED</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-semibold text-slate-200">${item.city}</td>
+          <td class="py-3 px-4 font-medium text-slate-100">${item.company}</td>
+          <td class="py-3 px-4">${matchBadge}</td>
+          <td class="py-3 px-4 text-slate-300">${item.solicitor}</td>
+          <td class="py-3 px-4 code-font text-slate-400 text-[11px]">${item.id}</td>
+          <td class="py-3 px-4 text-slate-400">${item.issueDate}</td>
+          <td class="py-3 px-4 font-mono text-slate-300">${item.expireDate}</td>
+          <td class="py-3 px-4 text-center">${statusBadge}</td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="viewRecordDetail('${item.id}')" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-slate-200" title="View Details">
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+      document.getElementById('table-record-count').innerText = `Showing ${data.length} entries`;
+      calculateAndRenderStats(data, solicitorData.length);
+    }
+
+    // Filter Logic incorporating Target Exterior Keywords
+    function applyFilters() {
+      const searchVal = document.getElementById('search-input').value.toLowerCase();
+      const cityVal = document.getElementById('filter-city').value;
+      const statusVal = document.getElementById('filter-status').value;
+      const strictKeywordToggle = document.getElementById('toggle-exterior-filter').checked;
+
+      const filtered = solicitorData.filter(item => {
+        const matchesKeyword = getMatchedKeyword(item.company) !== null;
+        if (strictKeywordToggle && !matchesKeyword) {
+          return false;
+        }
+
+        const matchesSearch = item.company.toLowerCase().includes(searchVal) ||
+                              item.solicitor.toLowerCase().includes(searchVal) ||
+                              item.id.toLowerCase().includes(searchVal) ||
+                              item.city.toLowerCase().includes(searchVal);
+        const matchesCity = cityVal === 'ALL' || item.city === cityVal;
+        const matchesStatus = statusVal === 'ALL' || item.status === statusVal;
+
+        return matchesSearch && matchesCity && matchesStatus;
+      });
+
+      renderDashboardTable(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('filter-city').value = 'ALL';
+      document.getElementById('filter-status').value = 'ALL';
+      document.getElementById('toggle-exterior-filter').checked = true;
+      applyFilters();
+    }
+
+    // Stats Calculation
+    function calculateAndRenderStats(visibleData, totalRawCount) {
+      const totalExteriorCount = solicitorData.filter(d => getMatchedKeyword(d.company) !== null).length;
+      const expiring = visibleData.filter(d => d.status === 'EXPIRING').length;
+      const companies = new Set(visibleData.map(d => d.company)).size;
+
+      document.getElementById('stat-total').innerText = totalRawCount || solicitorData.length;
+      document.getElementById('stat-exterior-matched').innerText = `${totalExteriorCount} (${Math.round((totalExteriorCount/(totalRawCount||1))*100)}%)`;
+      document.getElementById('stat-expiring').innerText = expiring;
+      document.getElementById('stat-companies').innerText = companies;
+
+      updateCharts(visibleData);
+    }
+
+    // Initialize Chart.js
+    function initCharts() {
+      const cityCtx = document.getElementById('chart-city-breakdown').getContext('2d');
+      cityChart = new Chart(cityCtx, {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: 'Exterior Contractor Permits', data: [], backgroundColor: '#22c55e' }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true }
+          }
+        }
+      });
+
+      const companyCtx = document.getElementById('chart-companies-breakdown').getContext('2d');
+      companyChart = new Chart(companyCtx, {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#22c55e', '#3b82f6', '#a855f7', '#f59e0b', '#ec4899'] }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } } } }
+        }
+      });
+
+      updateCharts(solicitorData);
+    }
+
+    function updateCharts(data) {
+      if (!cityChart || !companyChart) return;
+
+      // City chart counts
+      const cityCounts = {};
+      data.forEach(d => { cityCounts[d.city] = (cityCounts[d.city] || 0) + 1; });
+      cityChart.data.labels = Object.keys(cityCounts);
+      cityChart.data.datasets[0].data = Object.values(cityCounts);
+      cityChart.update();
+
+      // Company chart counts (Top 5)
+      const companyCounts = {};
+      data.forEach(d => { companyCounts[d.company] = (companyCounts[d.company] || 0) + 1; });
+      const sortedCompanies = Object.entries(companyCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+      companyChart.data.labels = sortedCompanies.map(c => c[0]);
+      companyChart.data.datasets[0].data = sortedCompanies.map(c => c[1]);
+      companyChart.update();
+    }
+
+    // Render City Configurator Cards
+    function renderCityCards() {
+      const container = document.getElementById('city-cards-grid');
+      container.innerHTML = '';
+
+      cityTargets.forEach((target, index) => {
+        const card = document.createElement('div');
+        card.className = "p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 relative group";
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div>
+              <h4 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
+                ${target.name}
+              </h4>
+              <a href="${target.url}" target="_blank" class="text-[11px] text-blue-400 hover:underline truncate block max-w-xs mt-0.5">
+                ${target.url}
+              </a>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+              ${target.format}
+            </span>
+          </div>
+
+          <div class="text-xs text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 space-y-1">
+            <div class="text-[11px] font-mono text-emerald-400">Strategy: ${target.method}</div>
+            <div class="text-[11px] text-slate-500">Selector/Pattern: <code class="text-slate-300">${target.selector}</code></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60">
+            <span class="text-slate-500 flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i> Keyword Filter Synchronized
+            </span>
+            <button onclick="removeCityTarget(${index})" class="text-slate-500 hover:text-rose-400 transition-colors">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // Add / Remove City Targets
+    function openAddCityModal() {
+      document.getElementById('modal-add-city').classList.remove('hidden');
+    }
+    function closeAddCityModal() {
+      document.getElementById('modal-add-city').classList.add('hidden');
+    }
+    function saveNewCity() {
+      const name = document.getElementById('new-city-name').value.trim();
+      const url = document.getElementById('new-city-url').value.trim();
+      const format = document.getElementById('new-city-format').value;
+      const notes = document.getElementById('new-city-notes').value.trim();
+
+      if (!name || !url) {
+        alert("Please enter both City Name and Target Endpoint URL.");
+        return;
+      }
+
+      cityTargets.push({
+        name,
+        url,
+        format,
+        status: "Active Custom Target",
+        method: notes || "Scrapes endpoint for solicitor roster data.",
+        selector: "custom-selector"
+      });
+
+      closeAddCityModal();
+      populateCityFilter();
+      renderCityCards();
+
+      // Clear Inputs
+      document.getElementById('new-city-name').value = '';
+      document.getElementById('new-city-url').value = '';
+      document.getElementById('new-city-notes').value = '';
+    }
+
+    function removeCityTarget(index) {
+      cityTargets.splice(index, 1);
+      populateCityFilter();
+      renderCityCards();
+    }
+
+    // Code Generator Tab Switcher & Renderer with Explicit String Filtering Logic
+    function switchGeneratorLang(lang) {
+      currentCodeLang = lang;
+      ['python', 'node', 'github'].forEach(l => {
+        const btn = document.getElementById(`btn-lang-${l}`);
+        if (l === lang) {
+          btn.className = "px-3 py-1 rounded text-xs font-medium bg-emerald-600 text-white";
+        } else {
+          btn.className = "px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200";
+        }
+      });
+      updateCodeSnippet();
+    }
+
+    function updateCodeSnippet() {
+      const codeBlock = document.getElementById('code-output-block');
+      const kwFormattedPython = JSON.stringify(targetKeywords);
+      const kwFormattedJs = JSON.stringify(targetKeywords);
+      
+      if (currentCodeLang === 'python') {
+        codeBlock.textContent = `# MSP Exterior Contractor Solicitor Scraper & Aggregator (Python 3.11)
+# Requirements: pip install requests beautifulsoup4 pdfplumber pandas
+
+import os
+import re
+import json
+import requests
+import pdfplumber
+from bs4 import BeautifulSoup
+from datetime import datetime
+
+# Target Keywords for Exterior Contractors
+TARGET_KEYWORDS = ${kwFormattedPython}
+
+# Target Twin Cities Municipal Profiles
+CITY_TARGETS = [
+    {
+        "city": "Coon Rapids",
+        "url": "https://www.coonrapidsmn.gov/1165/Current-Solicitor-Peddler-Lists",
+        "type": "PDF",
+        "pdf_keyword": "Solicitor"
+    },
+    {
+        "city": "Rosemount",
+        "url": "https://www.rosemountmn.gov/303/Door-to-Door-Solicitors",
+        "type": "HTML",
+        "table_selector": "table"
+    }
+]
+
+def is_target_exterior_company(company_name):
+    """Strictly checks if company contains window, roofing, exterior, or siding terms."""
+    if not company_name:
+        return False, None
+    name_lower = company_name.lower()
+    for kw in TARGET_KEYWORDS:
+        if kw in name_lower:
+            return True, kw
+    return False, None
+
+def scrape_coon_rapids_pdf(target):
+    """Downloads & extracts matching exterior contractors from Coon Rapids PDF roster."""
+    resp = requests.get(target["url"])
+    soup = BeautifulSoup(resp.text, 'html.parser')
+    
+    pdf_anchor = soup.find('a', text=re.compile(target["pdf_keyword"], re.I))
+    if not pdf_anchor:
+        print(f"[-] Could not find PDF link for {target['city']}")
+        return []
+        
+    pdf_url = "https://www.coonrapidsmn.gov" + pdf_anchor['href']
+    pdf_bytes = requests.get(pdf_url).content
+    
+    with open("/tmp/temp_solicitor.pdf", "wb") as f:
+        f.write(pdf_bytes)
+        
+    extracted_records = []
+    with pdfplumber.open("/tmp/temp_solicitor.pdf") as pdf:
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            for table in tables:
+                for row in table[1:]: # Skip header
+                    if len(row) >= 3:
+                        company_name = row[0].strip() if row[0] else ""
+                        # Apply strict string filtering
+                        is_match, matched_kw = is_target_exterior_company(company_name)
+                        if is_match:
+                            extracted_records.append({
+                                "city": "Coon Rapids",
+                                "company": company_name,
+                                "matchedKeyword": matched_kw,
+                                "solicitor": row[1].strip() if row[1] else "N/A",
+                                "expireDate": row[2].strip() if row[2] else "N/A",
+                                "status": "ACTIVE"
+                            })
+    return extracted_records
+
+def scrape_rosemount_html(target):
+    """Scrapes HTML door-to-door solicitor table filtered for target exterior contractors."""
+    resp = requests.get(target["url"])
+    soup = BeautifulSoup(resp.text, 'html.parser')
+    table = soup.select_one(target["table_selector"])
+    
+    records = []
+    if not table:
+        return records
+        
+    for row in table.find_all('tr')[1:]:
+        cols = [c.text.strip() for c in row.find_all(['td', 'th'])]
+        if len(cols) >= 3:
+            company_name = cols[0]
+            # Apply strict string filtering
+            is_match, matched_kw = is_target_exterior_company(company_name)
+            if is_match:
+                records.append({
+                    "city": "Rosemount",
+                    "company": company_name,
+                    "matchedKeyword": matched_kw,
+                    "solicitor": cols[1],
+                    "expireDate": cols[2],
+                    "status": "ACTIVE"
+                })
+    return records
+
+def run_msp_aggregator():
+    print(f"[*] Starting Scraper with Keywords: {TARGET_KEYWORDS}")
+    all_data = []
+    
+    for target in CITY_TARGETS:
+        try:
+            if target["type"] == "PDF":
+                records = scrape_coon_rapids_pdf(target)
+            else:
+                records = scrape_rosemount_html(target)
+            all_data.extend(records)
+            print(f"[+] Found {len(records)} matching exterior contractor records for {target['city']}")
+        except Exception as e:
+            print(f"[-] Error scraping {target['city']}: {str(e)}")
+
+    # Save Output
+    with open("msp_exterior_solicitors.json", "w") as f:
+        json.dump(all_data, f, indent=2)
+    print(f"[✓] Saved {len(all_data)} filtered exterior contractor leads to msp_exterior_solicitors.json")
+
+if __name__ == "__main__":
+    run_msp_aggregator()`;
+      } else if (currentCodeLang === 'node') {
+        codeBlock.textContent = `// Node.js & Playwright MSP Exterior Contractor Aggregator
+// Install: npm install playwright pdf-parse fs-extra
+
+const { chromium } = require('playwright');
+const pdf = require('pdf-parse');
+const fs = require('fs-extra');
+
+// Target Keywords for Exterior Contractors
+const TARGET_KEYWORDS = ${kwFormattedJs};
+
+function getMatchedKeyword(companyName) {
+  if (!companyName) return null;
+  const lower = companyName.toLowerCase();
+  for (const kw of TARGET_KEYWORDS) {
+    if (lower.includes(kw.toLowerCase())) return kw;
+  }
+  return null;
+}
+
+const TARGET_CITIES = [
+  { name: 'Coon Rapids', url: 'https://www.coonrapidsmn.gov/1165/Current-Solicitor-Peddler-Lists', type: 'pdf' },
+  { name: 'Rosemount', url: 'https://www.rosemountmn.gov/303/Door-to-Door-Solicitors', type: 'html' }
+];
+
+async function runAggregator() {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const aggregatedResults = [];
+
+  for (const city of TARGET_CITIES) {
+    console.log(\`[*] Scraping \${city.name} for exterior keywords...\`);
+    try {
+      await page.goto(city.url, { waitUntil: 'networkidle' });
+
+      if (city.type === 'html') {
+        const rows = await page.$$eval('table tr', trs => 
+          trs.slice(1).map(tr => {
+            const tds = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
+            return { company: tds[0], solicitor: tds[1], expireDate: tds[2] };
+          })
+        );
+        
+        // Strict string filter logic
+        rows.forEach(r => {
+          const matchedKw = getMatchedKeyword(r.company);
+          if (matchedKw) {
+            aggregatedResults.push({ city: city.name, ...r, matchedKeyword: matchedKw, status: 'ACTIVE' });
+          }
+        });
+      } else if (city.type === 'pdf') {
+        const pdfHref = await page.$eval('a[href*="Solicitor"], a[href*=".pdf"]', a => a.href);
+        const downloadPage = await page.context().newPage();
+        const response = await downloadPage.goto(pdfHref);
+        const buffer = await response.body();
+        
+        const parsedPdf = await pdf(buffer);
+        const lines = parsedPdf.text.split('\\n');
+        lines.forEach(line => {
+          const matchedKw = getMatchedKeyword(line);
+          if (matchedKw) {
+            aggregatedResults.push({
+              city: city.name,
+              rawText: line.trim(),
+              matchedKeyword: matchedKw,
+              status: 'ACTIVE'
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.error(\`[-] Error scraping \${city.name}:\`, err.message);
+    }
+  }
+
+  await browser.close();
+  await fs.writeJson('msp_exterior_solicitors.json', aggregatedResults, { spaces: 2 });
+  console.log(\`[✓] Aggregated \${aggregatedResults.length} matching exterior contractor permits.\`);
+}
+
+runAggregator();`;
+      } else {
+        codeBlock.textContent = `# .github/workflows/daily-exterior-solicitor-scraper.yml
+name: Daily MSP Exterior Contractor Solicitor Scraper
+
+on:
+  schedule:
+    - cron: '0 10 * * *' # Daily at 04:00 AM CST
+  workflow_dispatch:
+
+jobs:
+  scrape-and-filter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 pdfplumber pandas
+
+      - name: Run Keyword Filtered Scraper
+        run: python scraper.py
+
+      - name: Commit Filtered Dataset
+        run: |
+          git config --global user.name 'MSP-Exterior-Bot'
+          git config --global user.email 'bot@local'
+          git add msp_exterior_solicitors.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update: $(date -u +'%Y-%m-%d') filtered exterior contractor permits" && git push)`;
+      }
+    }
+
+    function copyCodeSnippet() {
+      const codeText = document.getElementById('code-output-block').innerText;
+      navigator.clipboard.writeText(codeText).then(() => {
+        document.getElementById('copy-btn-text').innerText = "Copied!";
+        setTimeout(() => {
+          document.getElementById('copy-btn-text').innerText = "Copy Code";
+        }, 2000);
+      });
+    }
+
+    // Export Data as CSV or JSON (Respects active filtering & keywords)
+    function exportData(format) {
+      const searchVal = document.getElementById('search-input').value.toLowerCase();
+      const cityVal = document.getElementById('filter-city').value;
+      const statusVal = document.getElementById('filter-status').value;
+      const strictKeywordToggle = document.getElementById('toggle-exterior-filter').checked;
+
+      const exportSet = solicitorData.filter(item => {
+        const matchesKeyword = getMatchedKeyword(item.company) !== null;
+        if (strictKeywordToggle && !matchesKeyword) return false;
+
+        const matchesSearch = item.company.toLowerCase().includes(searchVal) ||
+                              item.solicitor.toLowerCase().includes(searchVal) ||
+                              item.id.toLowerCase().includes(searchVal) ||
+                              item.city.toLowerCase().includes(searchVal);
+        const matchesCity = cityVal === 'ALL' || item.city === cityVal;
+        const matchesStatus = statusVal === 'ALL' || item.status === statusVal;
+
+        return matchesSearch && matchesCity && matchesStatus;
+      });
+
+      if (format === 'csv') {
+        let csv = "Permit ID,City,Company Name,Matched Keyword,Solicitor Name,Issue Date,Expiration Date,Status\n";
+        exportSet.forEach(row => {
+          const kw = getMatchedKeyword(row.company) || "N/A";
+          csv += `"${row.id}","${row.city}","${row.company}","${kw}","${row.solicitor}","${row.issueDate}","${row.expireDate}","${row.status}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `msp_exterior_solicitors_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+      } else if (format === 'json') {
+        const formattedJSON = exportSet.map(row => ({
+          ...row,
+          matchedKeyword: getMatchedKeyword(row.company) || null
+        }));
+        const blob = new Blob([JSON.stringify(formattedJSON, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `msp_exterior_solicitors_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+      }
+    }
+
+    // Simulate Scraper Refresh
+    function simulateScrapeRun() {
+      const icon = document.getElementById('refresh-icon');
+      icon.classList.add('animate-spin');
+
+      setTimeout(() => {
+        const cities = ["Coon Rapids", "Rosemount", "Andover", "Blaine", "Woodbury", "Eagan"];
+        const companies = [
+          "Summit Window & Siding Co",
+          "Heritage Exterior Restoration",
+          "Pinnacle Roofing Pros",
+          "Aptive Pest Control"
+        ];
+        const randomCity = cities[Math.floor(Math.random() * cities.length)];
+        const randomComp = companies[Math.floor(Math.random() * companies.length)];
+        
+        const newRecord = {
+          id: `EXT-${Math.floor(1000 + Math.random() * 9000)}`,
+          city: randomCity,
+          company: randomComp,
+          solicitor: "Newly Scraped Representative",
+          issueDate: new Date().toISOString().slice(0,10),
+          expireDate: "2026-11-30",
+          status: "ACTIVE"
+        };
+
+        solicitorData.unshift(newRecord);
+        applyFilters();
+        icon.classList.remove('animate-spin');
+      }, 1000);
+    }
+
+    function viewRecordDetail(id) {
+      const record = solicitorData.find(r => r.id === id);
+      if (record) {
+        const matchedKw = getMatchedKeyword(record.company);
+        alert(`Solicitor Record Details:\n----------------------\nID: ${record.id}\nCity: ${record.city}\nCompany: ${record.company}\nKeyword Match: ${matchedKw ? matchedKw : 'None'}\nSolicitor: ${record.solicitor}\nIssue Date: ${record.issueDate}\nExpiration Date: ${record.expireDate}\nStatus: ${record.status}`);
+      }
+    }
+  </script>
+</body>
+</html>
