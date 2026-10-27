@@ -528,17 +528,21 @@
 
     // City Target Config Profiles
     let cityTargets = [
-      { 
-        city: 'Minneapolis (Solicitors)', 
-        strategy: 'HTML Directory', 
-        url: 'https://www.minneapolismn.gov/business-services/licenses-permits-inspections/business-licenses/door-secondhand/peddler-solicitor/solicitor/', 
-        selector: 'html-selector' 
+      {
+        name: "Minneapolis (Solicitors)",
+        url: "https://www.minneapolismn.gov/business-services/licenses-permits-inspections/business-licenses/door-secondhand/peddler-solicitor/solicitor/",
+        format: "HTML Directory",
+        status: "Online Directory",
+        method: "Scrapes active solicitor permits via municipal licensing portal.",
+        selector: "table.directory-table, .license-list"
       },
-      { 
-        city: 'Saint Paul (Solicitors)', 
-        strategy: 'HTML Directory', 
-        url: 'https://www.stpaul.gov/departments/safety-inspections/open-operate-expand-business/business-licenses-and-permits/peddler-license', 
-        selector: 'html-selector' 
+      {
+        name: "Saint Paul (Solicitors)",
+        url: "https://www.stpaul.gov/departments/safety-inspections/open-operate-expand-business/business-licenses-and-permits/peddler-license",
+        format: "HTML Directory",
+        status: "Online Directory",
+        method: "Queries active solicitor license filings from DSI PAULIE portal.",
+        selector: "#main-content table, .field-items"
       },
       {
         name: "Coon Rapids",
