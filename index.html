@@ -511,20 +511,24 @@
     let targetKeywords = ["window", "roofing", "exterior", "siding"];
 
     // Initial Dataset - Expanded with exterior contractor records and non-exterior baseline entries
-    let solicitorData = [
-      { id: "CR-2026-104", city: "Coon Rapids", company: "Apex Roofing & Solar", solicitor: "Marcus Vance", issueDate: "2026-03-10", expireDate: "2026-11-15", status: "ACTIVE" },
-      { id: "RM-8842", city: "Rosemount", company: "Aptive Pest Control", solicitor: "Brandon Lee", issueDate: "2026-04-01", expireDate: "2026-10-31", status: "ACTIVE" },
-      { id: "AND-9912", city: "Andover", company: "Midwest Window & Door", solicitor: "Derek Miller", issueDate: "2026-02-15", expireDate: "2026-11-01", status: "ACTIVE" },
-      { id: "WB-2026-09", city: "Woodbury", company: "Twin Cities Exterior Solutions", solicitor: "Sarah Jenkins", issueDate: "2026-05-12", expireDate: "2026-10-15", status: "EXPIRING" },
-      { id: "BL-5510", city: "Blaine", company: "Vivint Smart Home", solicitor: "Tyler Olson", issueDate: "2026-01-20", expireDate: "2026-12-31", status: "ACTIVE" },
-      { id: "EAG-4110", city: "Eagan", company: "Summit Exterior Group", solicitor: "Rachel Adams", issueDate: "2026-03-18", expireDate: "2026-10-28", status: "EXPIRING" },
-      { id: "PLY-3001", city: "Plymouth", company: "Renewal by Andersen Windows", solicitor: "Jason Thorne", issueDate: "2026-03-01", expireDate: "2026-09-30", status: "EXPIRED" },
-      { id: "MG-9081", city: "Maple Grove", company: "EcoShield Pest Solutions", solicitor: "Kevin Wright", issueDate: "2026-04-18", expireDate: "2026-11-30", status: "ACTIVE" },
-      { id: "CR-2026-210", city: "Coon Rapids", company: "All-Weather Siding & Gutters", solicitor: "Zachary Taylor", issueDate: "2026-05-01", expireDate: "2026-10-30", status: "ACTIVE" },
-      { id: "RM-9104", city: "Rosemount", company: "Capital Roofing & Construction", solicitor: "David Smith", issueDate: "2026-06-10", expireDate: "2026-11-15", status: "ACTIVE" },
-      { id: "WB-2026-88", city: "Woodbury", company: "North Star Window Crafters", solicitor: "Hannah Peterson", issueDate: "2026-02-10", expireDate: "2026-11-10", status: "ACTIVE" },
-      { id: "BL-5590", city: "Blaine", company: "Great Lakes Roofing & Siding", solicitor: "Eric Lindqvist", issueDate: "2026-04-05", expireDate: "2026-10-20", status: "EXPIRING" }
-    ];
+    let solicitorData = [];
+async function fetchLiveSolicitorData() {
+  try {
+    const res = await fetch('./data.json');
+    if (res.ok) {
+      solicitorData = await res.json();
+      console.log('Loaded live scraped permits:', solicitorData);
+    }
+  } catch (err) {
+    console.warn('Could not load data.json, starting with empty array:', err);
+  }
+  // Re-render table and charts with live data
+  if (typeof renderTable === 'function') renderTable();
+  if (typeof updateStats === 'function') updateStats();
+  if (typeof renderCharts === 'function') renderCharts();
+}
+
+document.addEventListener('DOMContentLoaded', fetchLiveSolicitorData);
 
     // City Target Config Profiles
     let cityTargets = [
