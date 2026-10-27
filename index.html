@@ -510,49 +510,71 @@
     // Configurable Target Exterior Keywords
     let targetKeywords = ["window", "roofing", "exterior", "siding"];
 
-    // Initial Dataset - Expanded with exterior contractor records and non-exterior baseline entries
-    let solicitorData = [];
 // Global variables
+
 let solicitorData = [];
-let monitoredCitiesCount = 0; // Initialize to 0
+let monitoredCitiesCount = 0; // Starts at 0, populated dynamically from scraper/data.json
 
 async function fetchLiveSolicitorData() {
   try {
     const res = await fetch(`./data.json?v=${Date.now()}`);
-    if (res.ok) {
-      const data = await res.json();
-      
-      // CRITICAL: Handle both legacy array format and new object format
-      if (Array.isArray(data)) {
-        solicitorData = data;
-        monitoredCitiesCount = new Set(data.map(item => item.city)).size;
-      } else {
-        solicitorData = data.records || []; // Must extract .records!
-        monitoredCitiesCount = data.monitoredCitiesCount || 10;
-      }
-      
-      console.log("Successfully loaded records:", solicitorData.length);
-      console.log("Monitored cities count:", monitoredCitiesCount);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    
+    const data = await res.json();
+
+    // Dynamically extract records AND the exact count of monitored cities from Python
+    if (Array.isArray(data)) {
+      solicitorData = data;
+      monitoredCitiesCount = new Set(data.map(item => item.city)).size;
+    } else {
+      solicitorData = data.records || [];
+      monitoredCitiesCount = data.monitoredCitiesCount || 0; // Pulls length of TARGET_CITIES dynamically
     }
+
+    // Update the stat card element dynamically
+    const cityCountEl = document.getElementById('stat-cities-count');
+    if (cityCountEl) {
+      cityCountEl.textContent = monitoredCitiesCount;
+    }
+
+    renderTableDirectly(solicitorData);
+
   } catch (err) {
-    console.warn("Could not load data.json:", err);
+    console.error("Failed to load solicitor data:", err);
   }
-  
-  // Update the Monitored Cities stat card
-  const cityCountEl = document.getElementById('stat-cities-count');
-  if (cityCountEl) {
-    cityCountEl.textContent = monitoredCitiesCount;
-  }
-  
-  // Render table and stats
-  if (typeof filterAndRender === 'function') {
-    filterAndRender();
-  } else if (typeof renderDashboardTable === 'function') {
-    renderDashboardTable(solicitorData);
-  }
-  
-  if (typeof updateStats === 'function') updateStats();
 }
+
+function renderTableDirectly(records) {
+  const tbody = document.getElementById('table-body') || 
+                document.getElementById('solicitor-table-body') || 
+                document.querySelector('tbody');
+
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-500">No active permits found matching criteria.</td></tr>`;
+    return;
+  }
+
+  records.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.className = "border-b border-slate-100 hover:bg-slate-50";
+    tr.innerHTML = `
+      <td class="py-3 px-4 text-sm font-medium text-slate-800">${item.company || 'Unknown'}</td>
+      <td class="py-3 px-4 text-sm text-slate-600">${item.city || 'Minneapolis'}</td>
+      <td class="py-3 px-4 text-sm text-slate-600">${item.representative || 'N/A'}</td>
+      <td class="py-3 px-4 text-sm text-slate-600">${item.issueDate || 'N/A'}</td>
+      <td class="py-3 px-4 text-sm text-slate-600">${item.expireDate || 'N/A'}</td>
+      <td class="py-3 px-4 text-sm"><span class="px-2 py-1 rounded text-xs font-semibold ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${item.status || 'ACTIVE'}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  fetchLiveSolicitorData();
+});
 
 function updateStats() {
   // Explicitly bind the MONITORED CITIES count to the value from data.json (which reflects TARGET_CITIES length)
