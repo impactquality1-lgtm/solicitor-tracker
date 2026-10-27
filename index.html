@@ -1309,37 +1309,51 @@ jobs:
       }
     }
 
-    // Simulate Scraper Refresh
-    function simulateScrapeRun() {
+    async function simulateScrapeRun() {
       const icon = document.getElementById('refresh-icon');
-      icon.classList.add('animate-spin');
+      if (icon) icon.classList.add('animate-spin');
 
-      setTimeout(() => {
-        const cities = ["Coon Rapids", "Rosemount", "Andover", "Blaine", "Woodbury", "Eagan"];
-        const companies = [
-          "Summit Window & Siding Co",
-          "Heritage Exterior Restoration",
-          "Pinnacle Roofing Pros",
-          "Aptive Pest Control"
-        ];
-        const randomCity = cities[Math.floor(Math.random() * cities.length)];
-        const randomComp = companies[Math.floor(Math.random() * companies.length)];
-        
-        const newRecord = {
-          id: `EXT-${Math.floor(1000 + Math.random() * 9000)}`,
-          city: randomCity,
-          company: randomComp,
-          solicitor: "Newly Scraped Representative",
-          issueDate: new Date().toISOString().slice(0,10),
-          expireDate: "2026-11-30",
-          status: "ACTIVE"
-        };
+      let token = localStorage.getItem('gh_pat_token');
+      if (!token) {
+        token = prompt('Enter your GitHub Personal Access Token to trigger the live scraper:');
+        if (!token) {
+          alert('Token required to run scraper on GitHub.');
+          if (icon) icon.classList.remove('animate-spin');
+          return;
+        }
+        localStorage.setItem('gh_pat_token', token.trim());
+      }
 
-        solicitorData.unshift(newRecord);
-        applyFilters();
-        icon.classList.remove('animate-spin');
-      }, 1000);
-    }
+      try {
+        const response = await fetch(
+          'https://api.github.com/repos/impactquality1-lgtm/solicitor-tracker/actions/workflows/scrape.yml/dispatches',
+          {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/vnd.github+json',
+              'Authorization': `Bearer ${token}`,
+              'X-GitHub-Api-Version': '2022-11-28'
+            },
+            body: JSON.stringify({ ref: 'main' })
+          }
+        );
+
+        if (response.status === 204) {
+          alert('Scraper triggered on GitHub Actions! Data will update on your dashboard in ~1-2 minutes.');
+          setTimeout(fetchLiveSolicitorData, 60000); // Re-fetch data.json after 60s
+        } else if (response.status === 401) {
+          alert('Invalid GitHub Token or missing permissions.');
+          localStorage.removeItem('gh_pat_token');
+        } else {
+          const err = await response.json();
+          alert(`GitHub API Error: ${err.message || response.statusText}`);
+        }
+      } catch (err) {
+        console.error('Workflow dispatch failure:', err);
+        alert('Network error connecting to GitHub API.');
+      } finally {
+        if (icon) icon.classList.remove('animate-spin');
+      }
 
     function viewRecordDetail(id) {
       const record = solicitorData.find(r => r.id === id);
