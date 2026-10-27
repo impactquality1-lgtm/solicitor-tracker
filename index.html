@@ -514,18 +514,18 @@
     let solicitorData = [];
 async function fetchLiveSolicitorData() {
   try {
-    const res = await fetch('./data.json');
+    // Adding ?v=${Date.now()} forces the browser to bypass CDN cache and pull fresh data every time
+    const res = await fetch(`./data.json?v=${Date.now()}`);
     if (res.ok) {
       solicitorData = await res.json();
-      console.log('Loaded live scraped permits:', solicitorData);
+      console.log('Loaded live scraped permits:', solicitorData.length, solicitorData);
     }
   } catch (err) {
     console.warn('Could not load data.json, starting with empty array:', err);
   }
   
-  // 👉 CALL YOUR ACTUAL FUNCTIONS HERE:
   if (typeof filterAndRender === 'function') {
-    filterAndRender(); // Or whatever your main filter function is named
+    filterAndRender();
   } else if (typeof renderDashboardTable === 'function') {
     renderDashboardTable(solicitorData);
   }
