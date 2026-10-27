@@ -1311,13 +1311,14 @@ jobs:
 
     async function simulateScrapeRun() {
       const icon = document.getElementById('refresh-icon');
+      
+      // Start spinning feedback
       if (icon) icon.classList.add('animate-spin');
 
       let token = localStorage.getItem('gh_pat_token');
       if (!token) {
         token = prompt('Enter your GitHub Personal Access Token to trigger the live scraper:');
         if (!token) {
-          alert('Token required to run scraper on GitHub.');
           if (icon) icon.classList.remove('animate-spin');
           return;
         }
@@ -1339,21 +1340,28 @@ jobs:
         );
 
         if (response.status === 204) {
-          alert('Scraper triggered on GitHub Actions! Data will update on your dashboard in ~1-2 minutes.');
-          setTimeout(fetchLiveSolicitorData, 60000); // Re-fetch data.json after 60s
+          alert('⚡ Scraper dispatched to GitHub Actions! Scraped results will update in data.json in ~1-2 minutes.');
+          // Auto re-fetch local data after 60 seconds
+          setTimeout(() => {
+            if (typeof fetchLiveSolicitorData === 'function') fetchLiveSolicitorData();
+          }, 60000);
         } else if (response.status === 401) {
-          alert('Invalid GitHub Token or missing permissions.');
+          alert('❌ Invalid GitHub Token or missing Actions write permissions.');
           localStorage.removeItem('gh_pat_token');
         } else {
-          const err = await response.json();
-          alert(`GitHub API Error: ${err.message || response.statusText}`);
+          const err = await response.json().catch(() => ({}));
+          alert(`GitHub API Error (${response.status}): ${err.message || response.statusText}`);
         }
       } catch (err) {
         console.error('Workflow dispatch failure:', err);
         alert('Network error connecting to GitHub API.');
       } finally {
-        if (icon) icon.classList.remove('animate-spin');
+        // Stop spin animation after short delay so user sees action completed
+        setTimeout(() => {
+          if (icon) icon.classList.remove('animate-spin');
+        }, 1200);
       }
+    }
 
     function viewRecordDetail(id) {
       const record = solicitorData.find(r => r.id === id);
