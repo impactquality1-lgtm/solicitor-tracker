@@ -512,43 +512,55 @@
 
     // Initial Dataset - Expanded with exterior contractor records and non-exterior baseline entries
     let solicitorData = [];
+// Global variables
+let solicitorData = [];
+let monitoredCitiesCount = 0; // Initialize to 0
+
 async function fetchLiveSolicitorData() {
   try {
     const res = await fetch(`./data.json?v=${Date.now()}`);
     if (res.ok) {
       const data = await res.json();
       
-      let monitoredCount = 0;
-      
       if (Array.isArray(data)) {
-        // Fallback if data.json is a plain array
+        // Legacy fallback if data.json is just an array
         solicitorData = data;
-        monitoredCount = new Set(data.map(item => item.city)).size;
+        monitoredCitiesCount = new Set(data.map(item => item.city)).size;
       } else {
-        // Standard payload: extract records & dynamic city count
+        // Modern payload: records + dynamic count from TARGET_CITIES
         solicitorData = data.records || [];
-        monitoredCount = data.monitoredCitiesCount || 0;
-      }
-      
-      // Dynamically update the MONITORED CITIES stat card
-      const cityCountEl = document.getElementById('stat-cities-count');
-      if (cityCountEl) {
-        cityCountEl.textContent = monitoredCount;
+        monitoredCitiesCount = data.monitoredCitiesCount || 0;
       }
     }
   } catch (err) {
     console.warn('Could not load data.json:', err);
   }
   
+  // Update stats and render table/charts
+  if (typeof updateStats === 'function') {
+    updateStats();
+  }
   if (typeof filterAndRender === 'function') {
     filterAndRender();
   } else if (typeof renderDashboardTable === 'function') {
     renderDashboardTable(solicitorData);
   }
-  
-  if (typeof updateStats === 'function') updateStats();
-  if (typeof renderCharts === 'function') renderCharts();
 }
+
+function updateStats() {
+  // Explicitly bind the MONITORED CITIES count to the value from data.json (which reflects TARGET_CITIES length)
+  const cityCountEl = document.getElementById('stat-cities-count');
+  if (cityCountEl) {
+    cityCountEl.textContent = monitoredCitiesCount;
+  }
+
+  // ... rest of your stats code for total permits, active count, etc.
+}
+
+// Trigger fetch on load
+window.addEventListener('DOMContentLoaded', () => {
+  fetchLiveSolicitorData();
+});
 
 document.addEventListener('DOMContentLoaded', fetchLiveSolicitorData);
 
