@@ -522,8 +522,14 @@ async function fetchLiveSolicitorData() {
   } catch (err) {
     console.warn('Could not load data.json, starting with empty array:', err);
   }
-  // Re-render table and charts with live data
-  if (typeof renderTable === 'function') renderTable();
+  
+  // 👉 CALL YOUR ACTUAL FUNCTIONS HERE:
+  if (typeof filterAndRender === 'function') {
+    filterAndRender(); // Or whatever your main filter function is named
+  } else if (typeof renderDashboardTable === 'function') {
+    renderDashboardTable(solicitorData);
+  }
+  
   if (typeof updateStats === 'function') updateStats();
   if (typeof renderCharts === 'function') renderCharts();
 }
