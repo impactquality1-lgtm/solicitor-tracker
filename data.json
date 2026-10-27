@@ -11,7 +11,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1200278",
@@ -25,7 +25,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1203582",
@@ -39,49 +39,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1162748",
-    "city": "Minneapolis",
-    "company": "THE WINDOW STORE INC",
-    "representative": "THE WINDOW STORE INC",
-    "solicitor": "THE WINDOW STORE INC",
-    "rep": "THE WINDOW STORE INC",
-    "issueDate": "2026-02-02",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1200278",
-    "city": "Minneapolis",
-    "company": "Precision Point Plumbing",
-    "representative": "Precision Point Plumbing",
-    "solicitor": "Precision Point Plumbing",
-    "rep": "Precision Point Plumbing",
-    "issueDate": "2026-09-14",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1162748",
-    "city": "Minneapolis",
-    "company": "THE WINDOW STORE INC",
-    "representative": "THE WINDOW STORE INC",
-    "solicitor": "THE WINDOW STORE INC",
-    "rep": "THE WINDOW STORE INC",
-    "issueDate": "2026-02-02",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1169216",
@@ -95,7 +53,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1201160",
@@ -109,7 +67,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1181112",
@@ -123,7 +81,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1195670",
@@ -137,77 +95,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1162748",
-    "city": "Minneapolis",
-    "company": "THE WINDOW STORE INC",
-    "representative": "THE WINDOW STORE INC",
-    "solicitor": "THE WINDOW STORE INC",
-    "rep": "THE WINDOW STORE INC",
-    "issueDate": "2026-02-02",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1195670",
-    "city": "Minneapolis",
-    "company": "Warners Stellian Co Inc",
-    "representative": "Warners Stellian Co Inc",
-    "solicitor": "Warners Stellian Co Inc",
-    "rep": "Warners Stellian Co Inc",
-    "issueDate": "2026-08-13",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1195670",
-    "city": "Minneapolis",
-    "company": "Warners Stellian Co Inc",
-    "representative": "Warners Stellian Co Inc",
-    "solicitor": "Warners Stellian Co Inc",
-    "rep": "Warners Stellian Co Inc",
-    "issueDate": "2026-08-13",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1200278",
-    "city": "Minneapolis",
-    "company": "Precision Point Plumbing",
-    "representative": "Precision Point Plumbing",
-    "solicitor": "Precision Point Plumbing",
-    "rep": "Precision Point Plumbing",
-    "issueDate": "2026-09-14",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1195670",
-    "city": "Minneapolis",
-    "company": "Warners Stellian Co Inc",
-    "representative": "Warners Stellian Co Inc",
-    "solicitor": "Warners Stellian Co Inc",
-    "rep": "Warners Stellian Co Inc",
-    "issueDate": "2026-08-13",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1168215",
@@ -221,7 +109,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1182611",
@@ -235,7 +123,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1170651",
@@ -249,7 +137,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1193930",
@@ -263,7 +151,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1180231",
@@ -277,7 +165,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Res",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1165878",
@@ -291,21 +179,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1162748",
-    "city": "Minneapolis",
-    "company": "THE WINDOW STORE INC",
-    "representative": "THE WINDOW STORE INC",
-    "solicitor": "THE WINDOW STORE INC",
-    "rep": "THE WINDOW STORE INC",
-    "issueDate": "2026-02-02",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1187718",
@@ -319,7 +193,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1199350",
@@ -333,7 +207,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1185533",
@@ -347,35 +221,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1200278",
-    "city": "Minneapolis",
-    "company": "Precision Point Plumbing",
-    "representative": "Precision Point Plumbing",
-    "solicitor": "Precision Point Plumbing",
-    "rep": "Precision Point Plumbing",
-    "issueDate": "2026-09-14",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1200278",
-    "city": "Minneapolis",
-    "company": "Precision Point Plumbing",
-    "representative": "Precision Point Plumbing",
-    "solicitor": "Precision Point Plumbing",
-    "rep": "Precision Point Plumbing",
-    "issueDate": "2026-09-14",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1156640",
@@ -389,7 +235,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1195454",
@@ -403,7 +249,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1203608",
@@ -417,21 +263,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1195670",
-    "city": "Minneapolis",
-    "company": "Warners Stellian Co Inc",
-    "representative": "Warners Stellian Co Inc",
-    "solicitor": "Warners Stellian Co Inc",
-    "rep": "Warners Stellian Co Inc",
-    "issueDate": "2026-08-13",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1162609",
@@ -445,63 +277,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1168215",
-    "city": "Minneapolis",
-    "company": "Precision Point Plumbing",
-    "representative": "Precision Point Plumbing",
-    "solicitor": "Precision Point Plumbing",
-    "rep": "Precision Point Plumbing",
-    "issueDate": "2026-03-13",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1156640",
-    "city": "Minneapolis",
-    "company": "Standard Heating and Air Conditioning Inc",
-    "representative": "Standard Heating and Air Conditioning Inc",
-    "solicitor": "Standard Heating and Air Conditioning Inc",
-    "rep": "Standard Heating and Air Conditioning Inc",
-    "issueDate": "2025-12-11",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1156640",
-    "city": "Minneapolis",
-    "company": "Standard Heating and Air Conditioning Inc",
-    "representative": "Standard Heating and Air Conditioning Inc",
-    "solicitor": "Standard Heating and Air Conditioning Inc",
-    "rep": "Standard Heating and Air Conditioning Inc",
-    "issueDate": "2025-12-11",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1168215",
-    "city": "Minneapolis",
-    "company": "Precision Point Plumbing",
-    "representative": "Precision Point Plumbing",
-    "solicitor": "Precision Point Plumbing",
-    "rep": "Precision Point Plumbing",
-    "issueDate": "2026-03-13",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1185555",
@@ -515,7 +291,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1197272",
@@ -529,7 +305,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1184686",
@@ -543,21 +319,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1197272",
-    "city": "Minneapolis",
-    "company": "Hero Home Services LLC",
-    "representative": "Hero Home Services LLC",
-    "solicitor": "Hero Home Services LLC",
-    "rep": "Hero Home Services LLC",
-    "issueDate": "2026-09-23",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1204426",
@@ -571,7 +333,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1180236",
@@ -585,7 +347,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1146942",
@@ -599,21 +361,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1165878",
-    "city": "Minneapolis",
-    "company": "Red Fox Remodeling LLC",
-    "representative": "Red Fox Remodeling LLC",
-    "solicitor": "Red Fox Remodeling LLC",
-    "rep": "Red Fox Remodeling LLC",
-    "issueDate": "2026-03-30",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1182589",
@@ -627,7 +375,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1180466",
@@ -641,7 +389,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1170852",
@@ -655,7 +403,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1206383",
@@ -669,7 +417,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1197270",
@@ -683,7 +431,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1160995",
@@ -697,7 +445,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1185220",
@@ -711,49 +459,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1165878",
-    "city": "Minneapolis",
-    "company": "Red Fox Remodeling LLC",
-    "representative": "Red Fox Remodeling LLC",
-    "solicitor": "Red Fox Remodeling LLC",
-    "rep": "Red Fox Remodeling LLC",
-    "issueDate": "2026-03-30",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1197272",
-    "city": "Minneapolis",
-    "company": "Hero Home Services LLC",
-    "representative": "Hero Home Services LLC",
-    "solicitor": "Hero Home Services LLC",
-    "rep": "Hero Home Services LLC",
-    "issueDate": "2026-09-23",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1162748",
-    "city": "Minneapolis",
-    "company": "THE WINDOW STORE INC",
-    "representative": "THE WINDOW STORE INC",
-    "solicitor": "THE WINDOW STORE INC",
-    "rep": "THE WINDOW STORE INC",
-    "issueDate": "2026-02-02",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1202678",
@@ -767,7 +473,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1169811",
@@ -781,7 +487,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1154328",
@@ -795,77 +501,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1154328",
-    "city": "Minneapolis",
-    "company": "MULBERRY BUILDERS",
-    "representative": "MULBERRY BUILDERS",
-    "solicitor": "MULBERRY BUILDERS",
-    "rep": "MULBERRY BUILDERS",
-    "issueDate": "2026-02-09",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Commercial",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1195670",
-    "city": "Minneapolis",
-    "company": "Warners Stellian Co Inc",
-    "representative": "Warners Stellian Co Inc",
-    "solicitor": "Warners Stellian Co Inc",
-    "rep": "Warners Stellian Co Inc",
-    "issueDate": "2026-08-13",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1185220",
-    "city": "Minneapolis",
-    "company": "Warners Stellian Co Inc",
-    "representative": "Warners Stellian Co Inc",
-    "solicitor": "Warners Stellian Co Inc",
-    "rep": "Warners Stellian Co Inc",
-    "issueDate": "2026-06-22",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Plumbing",
-    "status": "ISSUED"
-  },
-  {
-    "id": "BLDG1197270",
-    "city": "Minneapolis",
-    "company": "Hero Home Services LLC",
-    "representative": "Hero Home Services LLC",
-    "solicitor": "Hero Home Services LLC",
-    "rep": "Hero Home Services LLC",
-    "issueDate": "2026-09-23",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
-  },
-  {
-    "id": "BLDG1197272",
-    "city": "Minneapolis",
-    "company": "Hero Home Services LLC",
-    "representative": "Hero Home Services LLC",
-    "solicitor": "Hero Home Services LLC",
-    "rep": "Hero Home Services LLC",
-    "issueDate": "2026-09-23",
-    "expireDate": "2027-01-01",
-    "expirationDate": "2027-01-01",
-    "expires": "2027-01-01",
-    "matchedKeyword": "Mechanical",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1161627",
@@ -879,7 +515,7 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Mechanical",
-    "status": "ISSUED"
+    "status": "ACTIVE"
   },
   {
     "id": "BLDG1153049",
@@ -893,20 +529,244 @@
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "CLOSED"
+    "status": "ACTIVE"
   },
   {
-    "id": "BLDG1153049",
+    "id": "BLDG1200654",
     "city": "Minneapolis",
-    "company": "Helen Meyer",
-    "representative": "Helen Meyer",
-    "solicitor": "Helen Meyer",
-    "rep": "Helen Meyer",
-    "issueDate": "2026-01-07",
+    "company": "G3 Development Corp.",
+    "representative": "G3 Development Corp.",
+    "solicitor": "G3 Development Corp.",
+    "rep": "G3 Development Corp.",
+    "issueDate": "2026-10-07",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Res",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1190484",
+    "city": "Minneapolis",
+    "company": "Spetz Plumbing Corporation",
+    "representative": "Spetz Plumbing Corporation",
+    "solicitor": "Spetz Plumbing Corporation",
+    "rep": "Spetz Plumbing Corporation",
+    "issueDate": "2026-08-04",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1158133",
+    "city": "Minneapolis",
+    "company": "CenterPoint Energy Resource Corp",
+    "representative": "CenterPoint Energy Resource Corp",
+    "solicitor": "CenterPoint Energy Resource Corp",
+    "rep": "CenterPoint Energy Resource Corp",
+    "issueDate": "2025-12-18",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1205988",
+    "city": "Minneapolis",
+    "company": "Steinkraus Plumbing Inc",
+    "representative": "Steinkraus Plumbing Inc",
+    "solicitor": "Steinkraus Plumbing Inc",
+    "rep": "Steinkraus Plumbing Inc",
+    "issueDate": "2026-10-21",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1159868",
+    "city": "Minneapolis",
+    "company": "CenterPoint Energy Resource Corp",
+    "representative": "CenterPoint Energy Resource Corp",
+    "solicitor": "CenterPoint Energy Resource Corp",
+    "rep": "CenterPoint Energy Resource Corp",
+    "issueDate": "2025-12-26",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1151657",
+    "city": "Minneapolis",
+    "company": "CenterPoint Energy Resource Corp",
+    "representative": "CenterPoint Energy Resource Corp",
+    "solicitor": "CenterPoint Energy Resource Corp",
+    "rep": "CenterPoint Energy Resource Corp",
+    "issueDate": "2025-10-31",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1181388",
+    "city": "Minneapolis",
+    "company": "Major Mechanical Inc",
+    "representative": "Major Mechanical Inc",
+    "solicitor": "Major Mechanical Inc",
+    "rep": "Major Mechanical Inc",
+    "issueDate": "2026-07-21",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1188242",
+    "city": "Minneapolis",
+    "company": "Warners Stellian Co Inc",
+    "representative": "Warners Stellian Co Inc",
+    "solicitor": "Warners Stellian Co Inc",
+    "rep": "Warners Stellian Co Inc",
+    "issueDate": "2026-07-10",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1161736",
+    "city": "Minneapolis",
+    "company": "Seitz Brothers Inc",
+    "representative": "Seitz Brothers Inc",
+    "solicitor": "Seitz Brothers Inc",
+    "rep": "Seitz Brothers Inc",
+    "issueDate": "2026-02-02",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1180805",
+    "city": "Minneapolis",
+    "company": "Pronto Heating & Air Conditioning Inc",
+    "representative": "Pronto Heating & Air Conditioning Inc",
+    "solicitor": "Pronto Heating & Air Conditioning Inc",
+    "rep": "Pronto Heating & Air Conditioning Inc",
+    "issueDate": "2026-05-19",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Mechanical",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1182967",
+    "city": "Minneapolis",
+    "company": "Modern Heating & Air Conditioning LLC",
+    "representative": "Modern Heating & Air Conditioning LLC",
+    "solicitor": "Modern Heating & Air Conditioning LLC",
+    "rep": "Modern Heating & Air Conditioning LLC",
+    "issueDate": "2026-06-05",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1188779",
+    "city": "Minneapolis",
+    "company": "Ancoats",
+    "representative": "Ancoats",
+    "solicitor": "Ancoats",
+    "rep": "Ancoats",
+    "issueDate": "2026-08-18",
     "expireDate": "2027-01-01",
     "expirationDate": "2027-01-01",
     "expires": "2027-01-01",
     "matchedKeyword": "Commercial",
-    "status": "CLOSED"
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1166207",
+    "city": "Minneapolis",
+    "company": "Warners Stellian Co Inc",
+    "representative": "Warners Stellian Co Inc",
+    "solicitor": "Warners Stellian Co Inc",
+    "rep": "Warners Stellian Co Inc",
+    "issueDate": "2026-02-25",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1182909",
+    "city": "Minneapolis",
+    "company": "GRABOW PLUMBING INC",
+    "representative": "GRABOW PLUMBING INC",
+    "solicitor": "GRABOW PLUMBING INC",
+    "rep": "GRABOW PLUMBING INC",
+    "issueDate": "2026-06-05",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1189011",
+    "city": "Minneapolis",
+    "company": "Barr Web Industries Inc",
+    "representative": "Barr Web Industries Inc",
+    "solicitor": "Barr Web Industries Inc",
+    "rep": "Barr Web Industries Inc",
+    "issueDate": "2026-07-20",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1173222",
+    "city": "Minneapolis",
+    "company": "Warners Stellian Co Inc",
+    "representative": "Warners Stellian Co Inc",
+    "solicitor": "Warners Stellian Co Inc",
+    "rep": "Warners Stellian Co Inc",
+    "issueDate": "2026-04-20",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Plumbing",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLDG1153595",
+    "city": "Minneapolis",
+    "company": "Pro City Building and Remodeling",
+    "representative": "Pro City Building and Remodeling",
+    "solicitor": "Pro City Building and Remodeling",
+    "rep": "Pro City Building and Remodeling",
+    "issueDate": "2025-12-01",
+    "expireDate": "2027-01-01",
+    "expirationDate": "2027-01-01",
+    "expires": "2027-01-01",
+    "matchedKeyword": "Commercial",
+    "status": "ACTIVE"
   }
 ]

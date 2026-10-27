@@ -5,35 +5,48 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 
-def format_arcgis_date(epoch_ms):
-    """Converts ArcGIS Epoch timestamp (milliseconds) to YYYY-MM-DD string."""
-    if not epoch_ms:
+def format_arcgis_date(val):
+    """Robustly converts ArcGIS date fields (epoch ms, epoch sec, or string) to YYYY-MM-DD."""
+    if val is None:
         return None
     try:
-        if isinstance(epoch_ms, (int, float)) and epoch_ms > 1e11:
-            dt = datetime.fromtimestamp(epoch_ms / 1000.0, tz=timezone.utc)
+        if isinstance(val, (int, float)):
+            if val > 1e11:  # Milliseconds
+                dt = datetime.fromtimestamp(val / 1000.0, tz=timezone.utc)
+            elif val > 1e9:  # Seconds
+                dt = datetime.fromtimestamp(val, tz=timezone.utc)
+            else:
+                return None
             return dt.strftime("%Y-%m-%d")
-        elif isinstance(epoch_ms, str) and epoch_ms.isdigit():
-            dt = datetime.fromtimestamp(
-                float(epoch_ms) / 1000.0, tz=timezone.utc
-            )
-            return dt.strftime("%Y-%m-%d")
-        return str(epoch_ms)[:10]
+
+        if isinstance(val, str):
+            if val.isdigit():
+                num = float(val)
+                if num > 1e11:
+                    dt = datetime.fromtimestamp(num / 1000.0, tz=timezone.utc)
+                elif num > 1e9:
+                    dt = datetime.fromtimestamp(num, tz=timezone.utc)
+                else:
+                    return None
+                return dt.strftime("%Y-%m-%d")
+            return val[:10]
     except Exception:
         return None
+    return None
 
 
-def fetch_minneapolis_live_licenses():
+def fetch_minneapolis_live_permits():
     url = (
         "https://services.arcgis.com/afSMGVsC7QlRK1kZ/arcgis/rest/services/"
-        "Residential_Specialty/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=json"
+        "CCS_Permits/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=1000&outSR=4326&f=json"
     )
 
     records = []
-    print("Querying Minneapolis Open Data REST API...")
+    seen_permit_ids = set()  # Track unique IDs to eliminate duplicate rows
+    print("Querying active Minneapolis CCS_Permits REST API...")
 
-    # Current date reference: October 27, 2026
     now = datetime.now(timezone.utc)
+    cutoff_date = now - timedelta(days=365)  # Strict rolling 12-month window
 
     try:
         req = urllib.request.Request(
@@ -42,54 +55,76 @@ def fetch_minneapolis_live_licenses():
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
             },
         )
-        with urllib.request.urlopen(req, timeout=15) as response:
+        with urllib.request.urlopen(req, timeout=20) as response:
             payload = json.loads(response.read().decode("utf-8"))
             features = payload.get("features", [])
-            print(f"Total raw features fetched: {len(features)}")
+            print(f"Total raw permits fetched from CCS_Permits: {len(features)}")
 
-            skipped_expired = 0
+            skipped_old = 0
+            skipped_nodate = 0
+            skipped_duplicate = 0
 
             for item in features:
                 attrs = item.get("attributes", {})
 
-                # Extract expiration date (the primary date provided by the API)
-                raw_expire = attrs.get("expirationDate")
-                expire_str = format_arcgis_date(raw_expire)
+                # Unique ID check for deduplication
+                permit_id = str(
+                    attrs.get("permitNumber")
+                    or attrs.get("OBJECTID")
+                    or "MPLS-PERMIT"
+                )
+                if permit_id in seen_permit_ids:
+                    skipped_duplicate += 1
+                    continue
+                seen_permit_ids.add(permit_id)
 
-                if not expire_str:
-                    # If no expiration date, skip to ensure data integrity
-                    skipped_expired += 1
+                # Extract issue date
+                raw_issue = (
+                    attrs.get("issueDate")
+                    or attrs.get("IssuedDate")
+                    or attrs.get("ISSUE_DATE")
+                    or attrs.get("issued_date")
+                )
+                issue_str = format_arcgis_date(raw_issue)
+
+                if not issue_str:
+                    skipped_nodate += 1
                     continue
 
-                # Ensure license is not long expired (keep active or recently expired within 30 days)
+                # Enforce rolling 12-month filter
+                try:
+                    issue_dt = datetime.strptime(
+                        issue_str, "%Y-%m-%d"
+                    ).replace(tzinfo=timezone.utc)
+                    if issue_dt < cutoff_date:
+                        skipped_old += 1
+                        continue
+                except Exception:
+                    skipped_nodate += 1
+                    continue
+
+                raw_expire = attrs.get("expirationDate") or attrs.get("expireDate")
+                expire_str = format_arcgis_date(raw_expire) or "2027-01-01"
+
+                # Dynamically calculate status based on expiration date vs today
                 try:
                     expire_dt = datetime.strptime(
                         expire_str, "%Y-%m-%d"
                     ).replace(tzinfo=timezone.utc)
-                    # Filter out licenses that expired more than a year ago
-                    if expire_dt < (now - timedelta(days=365)):
-                        skipped_expired += 1
-                        continue
+                    status = "ACTIVE" if expire_dt >= now else "EXPIRED"
                 except Exception:
-                    skipped_expired += 1
-                    continue
-
-                # Estimate issue date as 1 year prior to expiration date for standard 1-year trade licenses
-                try:
-                    issue_dt = expire_dt - timedelta(days=365)
-                    issue_str = issue_dt.strftime("%Y-%m-%d")
-                except Exception:
-                    issue_str = "2026-01-01"
+                    status = "ACTIVE"
 
                 company_name = (
-                    attrs.get("dbaName")
+                    attrs.get("contractorName")
                     or attrs.get("applicantName")
-                    or "Unknown Company"
+                    or attrs.get("dbaName")
+                    or "Unknown Contractor"
                 )
                 rep_name = attrs.get("applicantName") or "N/A"
 
                 record = {
-                    "id": str(attrs.get("licenseNumber") or "MPLS-LIC"),
+                    "id": permit_id,
                     "city": attrs.get("city") or "Minneapolis",
                     "company": company_name,
                     "representative": rep_name,
@@ -99,13 +134,15 @@ def fetch_minneapolis_live_licenses():
                     "expireDate": expire_str,
                     "expirationDate": expire_str,
                     "expires": expire_str,
-                    "matchedKeyword": "contractor",
-                    "status": "ACTIVE",
+                    "matchedKeyword": str(attrs.get("permitType") or "construction"),
+                    "status": status,
                 }
                 records.append(record)
 
-            print(f"Retained {len(records)} active/current records.")
-            print(f"Filtered out {skipped_expired} expired or outdated records.")
+            print(f"Retained {len(records)} unique active permits.")
+            print(
+                f"Filtered out: {skipped_old} older than 12 months, {skipped_duplicate} duplicates, {skipped_nodate} missing dates."
+            )
 
     except Exception as e:
         print(f"Endpoint query failed: {e}")
@@ -114,11 +151,11 @@ def fetch_minneapolis_live_licenses():
 
 
 def main():
-    records = fetch_minneapolis_live_licenses()
+    records = fetch_minneapolis_live_permits()
     output_path = os.path.join(os.path.dirname(__file__), "data.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2)
-    print(f"Successfully wrote {len(records)} records to data.json.")
+    print(f"Successfully wrote {len(records)} unique live records to data.json.")
 
 
 if __name__ == "__main__":
