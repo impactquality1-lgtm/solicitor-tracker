@@ -522,29 +522,36 @@ async function fetchLiveSolicitorData() {
     if (res.ok) {
       const data = await res.json();
       
+      // CRITICAL: Handle both legacy array format and new object format
       if (Array.isArray(data)) {
-        // Legacy fallback if data.json is just an array
         solicitorData = data;
         monitoredCitiesCount = new Set(data.map(item => item.city)).size;
       } else {
-        // Modern payload: records + dynamic count from TARGET_CITIES
-        solicitorData = data.records || [];
-        monitoredCitiesCount = data.monitoredCitiesCount || 0;
+        solicitorData = data.records || []; // Must extract .records!
+        monitoredCitiesCount = data.monitoredCitiesCount || 10;
       }
+      
+      console.log("Successfully loaded records:", solicitorData.length);
+      console.log("Monitored cities count:", monitoredCitiesCount);
     }
   } catch (err) {
-    console.warn('Could not load data.json:', err);
+    console.warn("Could not load data.json:", err);
   }
   
-  // Update stats and render table/charts
-  if (typeof updateStats === 'function') {
-    updateStats();
+  // Update the Monitored Cities stat card
+  const cityCountEl = document.getElementById('stat-cities-count');
+  if (cityCountEl) {
+    cityCountEl.textContent = monitoredCitiesCount;
   }
+  
+  // Render table and stats
   if (typeof filterAndRender === 'function') {
     filterAndRender();
   } else if (typeof renderDashboardTable === 'function') {
     renderDashboardTable(solicitorData);
   }
+  
+  if (typeof updateStats === 'function') updateStats();
 }
 
 function updateStats() {
