@@ -20,9 +20,10 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4
+          pip install requests beautifulsoup4 pdfplumber playwright
+          playwright install chromium
 
-      - name: Run Scraper
+      - name: Run Multi-Engine Scraper
         run: python scraper.py
 
       - name: Commit and Push Updated Data
@@ -30,4 +31,4 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add data.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated daily refresh of live solicitor permit data" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated daily multi-scenario solicitor refresh" && git push)
