@@ -514,31 +514,30 @@
     let solicitorData = [];
 async function fetchLiveSolicitorData() {
   try {
-    // Adding ?v=${Date.now()} forces the browser to bypass CDN cache and pull fresh data every time
     const res = await fetch(`./data.json?v=${Date.now()}`);
     if (res.ok) {
-      const rawData = await res.json();
+      const data = await res.json();
       
-      // Sort immediately by City (A-Z) and then Issue Date (Oldest to Newest)
-      solicitorData = rawData.sort((a, b) => {
-        const cityA = (a.city || '').toLowerCase();
-        const cityB = (b.city || '').toLowerCase();
-        const cityCompare = cityA.localeCompare(cityB);
-        
-        if (cityCompare !== 0) {
-          return cityCompare;
-        }
-        
-        // Secondary sort by Issue Date (ASC)
-        const dateA = new Date(a.issueDate || a.issue_date || '1970-01-01');
-        const dateB = new Date(b.issueDate || b.issue_date || '1970-01-01');
-        return dateA - dateB;
-      });
-
-      console.log('Loaded live scraped permits sorted by City & Date:', solicitorData.length, solicitorData);
+      let monitoredCount = 0;
+      
+      if (Array.isArray(data)) {
+        // Fallback if data.json is a plain array
+        solicitorData = data;
+        monitoredCount = new Set(data.map(item => item.city)).size;
+      } else {
+        // Standard payload: extract records & dynamic city count
+        solicitorData = data.records || [];
+        monitoredCount = data.monitoredCitiesCount || 0;
+      }
+      
+      // Dynamically update the MONITORED CITIES stat card
+      const cityCountEl = document.getElementById('stat-cities-count');
+      if (cityCountEl) {
+        cityCountEl.textContent = monitoredCount;
+      }
     }
   } catch (err) {
-    console.warn('Could not load data.json, starting with empty array:', err);
+    console.warn('Could not load data.json:', err);
   }
   
   if (typeof filterAndRender === 'function') {

@@ -151,11 +151,21 @@ def fetch_minneapolis_live_permits():
 
 
 def main():
-    records = fetch_minneapolis_live_permits()
+    records = fetch_all_city_permits()
+
+    output_data = {
+        # Dynamically derived from the length of TARGET_CITIES array
+        "monitoredCitiesCount": len(TARGET_CITIES),
+        "records": records,
+    }
+
     output_path = os.path.join(os.path.dirname(__file__), "data.json")
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(records, f, indent=2)
-    print(f"Successfully wrote {len(records)} unique live records to data.json.")
+        json.dump(output_data, f, indent=2)
+
+    print(
+        f"\nSuccessfully wrote {len(records)} total records and {len(TARGET_CITIES)} monitored cities to data.json."
+    )
 
 
 if __name__ == "__main__":
