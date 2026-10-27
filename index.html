@@ -517,8 +517,25 @@ async function fetchLiveSolicitorData() {
     // Adding ?v=${Date.now()} forces the browser to bypass CDN cache and pull fresh data every time
     const res = await fetch(`./data.json?v=${Date.now()}`);
     if (res.ok) {
-      solicitorData = await res.json();
-      console.log('Loaded live scraped permits:', solicitorData.length, solicitorData);
+      const rawData = await res.json();
+      
+      // Sort immediately by City (A-Z) and then Issue Date (Oldest to Newest)
+      solicitorData = rawData.sort((a, b) => {
+        const cityA = (a.city || '').toLowerCase();
+        const cityB = (b.city || '').toLowerCase();
+        const cityCompare = cityA.localeCompare(cityB);
+        
+        if (cityCompare !== 0) {
+          return cityCompare;
+        }
+        
+        // Secondary sort by Issue Date (ASC)
+        const dateA = new Date(a.issueDate || a.issue_date || '1970-01-01');
+        const dateB = new Date(b.issueDate || b.issue_date || '1970-01-01');
+        return dateA - dateB;
+      });
+
+      console.log('Loaded live scraped permits sorted by City & Date:', solicitorData.length, solicitorData);
     }
   } catch (err) {
     console.warn('Could not load data.json, starting with empty array:', err);
