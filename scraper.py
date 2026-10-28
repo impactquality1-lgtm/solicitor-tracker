@@ -61,6 +61,12 @@ TARGET_CITIES = [
     },
 ]
 
+BROWSER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
 
 def format_arcgis_date(val):
     if val is None:
@@ -101,8 +107,32 @@ def get_attr(attrs, *keys):
     return None
 
 
+def parse_pdf_date(date_str):
+    """Helper to convert various PDF date formats into YYYY-MM-DD."""
+    if not date_str:
+        return None
+    date_str = date_str.strip()
+    
+    match = re.search(r'(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})', date_str)
+    if match:
+        m, d, y = match.groups()
+        if len(y) == 2:
+            y = "20" + y
+        try:
+            dt = datetime(int(y), int(m), int(d), tzinfo=timezone.utc)
+            return dt.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+            
+    match_iso = re.search(r'(\d{4})-(\d{2})-(\d{2})', date_str)
+    if match_iso:
+        return match_iso.group(0)
+        
+    return None
+
+
 def fetch_pdf_permits(target):
-    """Generic PDF scraper for municipalities publishing solicitor rosters as PDFs."""
+    """Generic PDF scraper that extracts companies, reps, and actual live dates from PDF tables."""
     records = []
     city_name = target["city"]
     page_url = target["url"]
@@ -113,10 +143,7 @@ def fetch_pdf_permits(target):
 
     print(f"Querying solicitor PDF roster for {city_name}...")
     try:
-        req = urllib.request.Request(
-            page_url,
-            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
-        )
+        req = urllib.request.Request(page_url, headers=BROWSER_HEADERS)
         with urllib.request.urlopen(req, timeout=20) as response:
             html_content = response.read().decode("utf-8")
 
@@ -145,16 +172,11 @@ def fetch_pdf_permits(target):
             return records
 
         print(f"Downloading PDF for {city_name} from: {target_pdf_url}")
-        pdf_req = urllib.request.Request(
-            target_pdf_url,
-            HEADERS = {
-    	"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    	"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    	"Accept-Language": "en-US,en;q=0.9",
-	}
-        )
+        pdf_req = urllib.request.Request(target_pdf_url, headers=BROWSER_HEADERS)
         with urllib.request.urlopen(pdf_req, timeout=30) as pdf_resp:
             pdf_bytes = pdf_resp.read()
+
+        now = datetime.now(timezone.utc)
 
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
             for page_idx, page in enumerate(pdf.pages):
@@ -162,32 +184,63 @@ def fetch_pdf_permits(target):
                 if not table:
                     continue
 
-                for row_idx, row in enumerate(table[1:]):  # Skip header
+                for row_idx, row in enumerate(table):
                     if not row or len(row) < 2:
                         continue
 
                     cleaned_row = [str(cell).strip() if cell else "" for cell in row]
-                    company = cleaned_row[0] if len(cleaned_row) > 0 and cleaned_row[0] else "Unknown Company"
-                    rep_name = cleaned_row[1] if len(cleaned_row) > 1 and cleaned_row[1] else "N/A"
-                    expire_date = cleaned_row[2] if len(cleaned_row) > 2 and re.match(r'\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4}', cleaned_row[2]) else "2027-01-01"
+                    
+                    # Skip header / disclaimer rows
+                    row_text = " ".join(cleaned_row).lower()
+                    if any(skip_word in row_text for skip_word in ["company", "name", "solicitor", "peddler", "license #", "date", "issued", "status", "page"]):
+                        continue
+
+                    company = cleaned_row[0]
+                    rep_name = cleaned_row[1] if len(cleaned_row) > 1 else "N/A"
+                    
+                    if not company or len(company) < 2 or company.replace(".", "").isdigit():
+                        continue
+
+                    # Scan all cells in the row for valid date strings
+                    found_dates = []
+                    for cell in cleaned_row[2:]:
+                        parsed_d = parse_pdf_date(cell)
+                        if parsed_d:
+                            found_dates.append(parsed_d)
+
+                    expire_date = "2027-01-01"
+                    issue_date = "2026-01-01"
+
+                    if len(found_dates) >= 2:
+                        found_dates.sort()
+                        issue_date = found_dates[0]
+                        expire_date = found_dates[-1]
+                    elif len(found_dates) == 1:
+                        expire_date = found_dates[0]
+
+                    try:
+                        expire_dt = datetime.strptime(expire_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        status = "ACTIVE" if expire_dt >= now else "EXPIRED"
+                    except Exception:
+                        status = "ACTIVE"
 
                     record = {
                         "id": f"{city_name[:3].upper()}-{page_idx}-{row_idx}-{hash(company) % 10000}",
                         "city": city_name,
                         "company": company,
-                        "representative": rep_name,
-                        "solicitor": rep_name,
-                        "rep": rep_name,
-                        "issueDate": "2026-01-01",
+                        "representative": rep_name if rep_name else "N/A",
+                        "solicitor": rep_name if rep_name else "N/A",
+                        "rep": rep_name if rep_name else "N/A",
+                        "issueDate": issue_date,
                         "expireDate": expire_date,
                         "expirationDate": expire_date,
                         "expires": expire_date,
                         "matchedKeyword": "solicitor-pdf",
-                        "status": "ACTIVE",
+                        "status": status,
                     }
                     records.append(record)
 
-        print(f"Extracted {len(records)} valid records for {city_name} from PDF.")
+        print(f"Extracted {len(records)} valid records with parsed dates for {city_name} from PDF.")
     except Exception as e:
         print(f"Failed to process PDF for {city_name}: {e}")
 
@@ -218,10 +271,7 @@ def fetch_all_city_permits():
         else:
             print(f"Querying active live permits for {city_name} (ArcGIS)...")
             try:
-                req = urllib.request.Request(
-                    url,
-                    headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"},
-                )
+                req = urllib.request.Request(url, headers=BROWSER_HEADERS)
                 with urllib.request.urlopen(req, timeout=20) as response:
                     payload = json.loads(response.read().decode("utf-8"))
                     features = payload.get("features", [])
