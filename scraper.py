@@ -8,17 +8,12 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 import pdfplumber
 
-# Official list of 10 monitored Twin Cities municipalities with dynamic source types.
+# Official list of monitored Twin Cities municipalities with dynamic source types.
 TARGET_CITIES = [
     {
         "city": "Minneapolis",
         "type": "arcgis",
         "url": "https://services.arcgis.com/afSMGVsC7QlRK1kZ/arcgis/rest/services/CCS_Permits/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=1000&outSR=4326&f=json",
-    },
-    {
-        "city": "St. Paul",
-        "type": "arcgis",
-        "url": "https://services1.arcgis.com/9meaaHE3uiba0zr8/arcgis/rest/services/Encroachment_Permits/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=1000&outSR=4326&f=json",
     },
     {
         "city": "Coon Rapids",
@@ -287,33 +282,26 @@ def fetch_all_city_permits():
                         attrs = item.get("attributes", {})
 
                         permit_id = str(
-                            get_attr(attrs, "permitNumber", "permit_number", "folder_rsn", "objectid", "fid", "id", "encid")
+                            get_attr(attrs, "permitNumber", "permit_number", "folder_rsn", "objectid", "fid", "id")
                             or f"{city_name}-PERMIT"
                         )
                         if permit_id in seen_permit_ids:
                             continue
                         seen_permit_ids.add(permit_id)
 
-                        raw_issue = get_attr(
-                            attrs, 
-                            "approvdate", "issueDate", "issuedate", "issue_date", "permit_date", 
-                            "issue_dt", "date_issued", "issued", "created", "date", "permitdate"
-                        )
-                        issue_str = format_arcgis_date(raw_issue) or "2025-01-01"
+                        raw_issue = get_attr(attrs, "issueDate", "issuedate", "issue_date", "permit_date")
+                        issue_str = format_arcgis_date(raw_issue)
+                        if not issue_str:
+                            continue
 
                         try:
                             issue_dt = datetime.strptime(issue_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                            # Only apply strict 365-day cutoff for Minneapolis, allow St. Paul encroachments through
-                            if city_name != "St. Paul" and issue_dt < cutoff_date:
+                            if issue_dt < cutoff_date:
                                 continue
                         except Exception:
-                            pass
+                            continue
 
-                        raw_expire = get_attr(
-                            attrs, 
-                            "expirationDate", "expirationdate", "expiredate", "expire_date", 
-                            "expire_dt", "expiration", "expires", "valid_until"
-                        )
+                        raw_expire = get_attr(attrs, "expirationDate", "expirationdate", "expiredate", "expire_date")
                         expire_str = format_arcgis_date(raw_expire) or "2027-01-01"
 
                         try:
@@ -323,10 +311,10 @@ def fetch_all_city_permits():
                             status = "ACTIVE"
 
                         company_name = str(
-                            get_attr(attrs, "enc_type", "contractorName", "contractor_name", "applicantName", "applicant_name", "dbaname", "company_name", "business_name")
-                            or "Permittee"
+                            get_attr(attrs, "contractorName", "contractor_name", "applicantName", "applicant_name", "dbaname", "company_name")
+                            or "Unknown Contractor"
                         )
-                        rep_name = str(get_attr(attrs, "enc_notes", "applicantName", "applicant_name", "representative", "contractorName", "contact_name", "prop_add") or "N/A")
+                        rep_name = str(get_attr(attrs, "applicantName", "applicant_name", "representative", "contractorName") or "N/A")
 
                         record = {
                             "id": permit_id,
@@ -339,7 +327,7 @@ def fetch_all_city_permits():
                             "expireDate": expire_str,
                             "expirationDate": expire_str,
                             "expires": expire_str,
-                            "matchedKeyword": str(get_attr(attrs, "permitType", "permit_type", "folder_type", "type", "enc_type") or "permit"),
+                            "matchedKeyword": str(get_attr(attrs, "permitType", "permit_type", "folder_type") or "construction"),
                             "status": status,
                         }
                         records.append(record)
