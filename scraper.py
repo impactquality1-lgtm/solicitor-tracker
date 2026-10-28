@@ -4,9 +4,9 @@ import os
 import re
 import ssl
 import urllib.parse
-import urllib.request
 from datetime import datetime, timedelta, timezone
 import pdfplumber
+from curl_cffi import requests as crequests
 
 # Official list of monitored Twin Cities municipalities with dynamic source types.
 TARGET_CITIES = [
@@ -57,13 +57,7 @@ TARGET_CITIES = [
     },
 ]
 
-BROWSER_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-}
-
-# Create an unverified SSL context to prevent handshake blocks on municipal servers
+# Create an unverified SSL context for fallback urllib calls if needed
 SSL_CONTEXT = ssl.create_default_context()
 SSL_CONTEXT.check_hostname = False
 SSL_CONTEXT.verify_mode = ssl.CERT_NONE
@@ -133,7 +127,7 @@ def parse_pdf_date(date_str):
 
 
 def fetch_pdf_permits(target):
-    """Generic PDF scraper with refined filtering to prevent dropping valid records."""
+    """Generic PDF scraper optimized for municipal portals using browser impersonation (`curl_cffi`)."""
     records = []
     city_name = target["city"]
     page_url = target["url"]
@@ -142,11 +136,15 @@ def fetch_pdf_permits(target):
         print(f"Skipping {city_name} (PDF): No URL configured.")
         return records
 
-    print(f"Querying solicitor PDF roster for {city_name}...")
+    print(f"Querying solicitor PDF portal for {city_name}...")
     try:
-        req = urllib.request.Request(page_url, headers=BROWSER_HEADERS)
-        with urllib.request.urlopen(req, timeout=20, context=SSL_CONTEXT) as response:
-            html_content = response.read().decode("utf-8")
+        # Use curl_cffi with Chrome impersonation to bypass Cloudflare / WAF 403 blocks
+        response = crequests.get(page_url, impersonate="chrome120", timeout=20)
+        if response.status_code != 200:
+            print(f"[{city_name}] HTTP Status {response.status_code}: Portal protected or unavailable.")
+            return records
+            
+        html_content = response.text
 
         pdf_links = re.findall(r'href="([^"]+\.pdf[^"]*)"', html_content, re.IGNORECASE)
         doc_center_links = re.findall(r'href="(/DocumentCenter/View/[^"]+)"', html_content)
@@ -154,30 +152,31 @@ def fetch_pdf_permits(target):
         parsed_uri = urllib.parse.urlparse(page_url)
         base_domain = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
         
-        all_candidates = pdf_links + [f"{base_domain}{l}" if l.startswith("/") else l for l in doc_center_links]
+        all_candidates = [f"{base_domain}{l}" if l.startswith("/") else l for l in doc_center_links] + pdf_links
         
         target_pdf_url = None
         for link in all_candidates:
-            if any(kw in link.lower() for kw in ["solicitor", "peddler", "license", "current", "list"]):
-                if not any(ex in link.lower() for ex in ["app.pdf", "application", "ordinance"]):
-                    if link.startswith("http"):
-                        target_pdf_url = link
-                    elif link.startswith("/"):
-                        target_pdf_url = f"{base_domain}{link}"
+            link_lower = link.lower()
+            if any(kw in link_lower for kw in ["solicitor", "peddler", "license", "current", "list", "view", "roster"]):
+                if not any(ex in link_lower for ex in ["app", "application", "form", "packet", "ordinance", "fee"]):
+                    target_pdf_url = link if link.startswith("http") else f"{base_domain}{link}"
                     break
 
-        if not target_pdf_url and all_candidates:
-            target_pdf_url = all_candidates[0] if all_candidates[0].startswith("http") else None
+        if not target_pdf_url and doc_center_links:
+            l = doc_center_links[0]
+            target_pdf_url = f"{base_domain}{l}" if l.startswith("/") else l
 
         if not target_pdf_url:
-            print(f"Could not resolve active PDF link for {city_name}.")
+            print(f"[{city_name}] Notice: No public active roster PDF published.")
             return records
 
         print(f"Downloading PDF for {city_name} from: {target_pdf_url}")
-        pdf_req = urllib.request.Request(target_pdf_url, headers=BROWSER_HEADERS)
-        with urllib.request.urlopen(pdf_req, timeout=30, context=SSL_CONTEXT) as pdf_resp:
-            pdf_bytes = pdf_resp.read()
-
+        pdf_resp = crequests.get(target_pdf_url, impersonate="chrome120", timeout=30)
+        if pdf_resp.status_code != 200:
+            print(f"Failed to download PDF for {city_name} (Status {pdf_resp.status_code})")
+            return records
+            
+        pdf_bytes = pdf_resp.content
         now = datetime.now(timezone.utc)
 
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
@@ -193,7 +192,7 @@ def fetch_pdf_permits(target):
                     cleaned_row = [str(cell).strip() if cell else "" for cell in row]
                     
                     first_cell_lower = cleaned_row[0].lower()
-                    if first_cell_lower in ["company", "company name", "business name", "applicant", "name"]:
+                    if any(w in first_cell_lower for w in ["company", "name", "business", "applicant", "header", "title"]):
                         continue
 
                     company = cleaned_row[0]
@@ -241,6 +240,7 @@ def fetch_pdf_permits(target):
                     records.append(record)
 
         print(f"Extracted {len(records)} valid records for {city_name} from PDF.")
+
     except Exception as e:
         print(f"Failed to process PDF for {city_name}: {e}")
 
@@ -271,69 +271,72 @@ def fetch_all_city_permits():
         else:
             print(f"Querying active live permits for {city_name} (ArcGIS)...")
             try:
-                req = urllib.request.Request(url, headers=BROWSER_HEADERS)
-                with urllib.request.urlopen(req, timeout=20, context=SSL_CONTEXT) as response:
-                    payload = json.loads(response.read().decode("utf-8"))
-                    features = payload.get("features", [])
-                    print(f"Fetched {len(features)} raw features for {city_name}.")
+                response = crequests.get(url, impersonate="chrome120", timeout=20)
+                if response.status_code != 200:
+                    print(f"Failed to query endpoint for {city_name}: HTTP {response.status_code}")
+                    continue
 
-                    city_retained = 0
-                    for item in features:
-                        attrs = item.get("attributes", {})
+                payload = response.json()
+                features = payload.get("features", [])
+                print(f"Fetched {len(features)} raw features for {city_name}.")
 
-                        permit_id = str(
-                            get_attr(attrs, "permitNumber", "permit_number", "folder_rsn", "objectid", "fid", "id")
-                            or f"{city_name}-PERMIT"
-                        )
-                        if permit_id in seen_permit_ids:
+                city_retained = 0
+                for item in features:
+                    attrs = item.get("attributes", {})
+
+                    permit_id = str(
+                        get_attr(attrs, "permitNumber", "permit_number", "folder_rsn", "objectid", "fid", "id")
+                        or f"{city_name}-PERMIT"
+                    )
+                    if permit_id in seen_permit_ids:
+                        continue
+                    seen_permit_ids.add(permit_id)
+
+                    raw_issue = get_attr(attrs, "issueDate", "issuedate", "issue_date", "permit_date")
+                    issue_str = format_arcgis_date(raw_issue)
+                    if not issue_str:
+                        continue
+
+                    try:
+                        issue_dt = datetime.strptime(issue_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        if issue_dt < cutoff_date:
                             continue
-                        seen_permit_ids.add(permit_id)
+                    except Exception:
+                        continue
 
-                        raw_issue = get_attr(attrs, "issueDate", "issuedate", "issue_date", "permit_date")
-                        issue_str = format_arcgis_date(raw_issue)
-                        if not issue_str:
-                            continue
+                    raw_expire = get_attr(attrs, "expirationDate", "expirationdate", "expiredate", "expire_date")
+                    expire_str = format_arcgis_date(raw_expire) or "2027-01-01"
 
-                        try:
-                            issue_dt = datetime.strptime(issue_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                            if issue_dt < cutoff_date:
-                                continue
-                        except Exception:
-                            continue
+                    try:
+                        expire_dt = datetime.strptime(expire_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        status = "ACTIVE" if expire_dt >= now else "EXPIRED"
+                    except Exception:
+                        status = "ACTIVE"
 
-                        raw_expire = get_attr(attrs, "expirationDate", "expirationdate", "expiredate", "expire_date")
-                        expire_str = format_arcgis_date(raw_expire) or "2027-01-01"
+                    company_name = str(
+                        get_attr(attrs, "contractorName", "contractor_name", "applicantName", "applicant_name", "dbaname", "company_name")
+                        or "Unknown Contractor"
+                    )
+                    rep_name = str(get_attr(attrs, "applicantName", "applicant_name", "representative", "contractorName") or "N/A")
 
-                        try:
-                            expire_dt = datetime.strptime(expire_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                            status = "ACTIVE" if expire_dt >= now else "EXPIRED"
-                        except Exception:
-                            status = "ACTIVE"
+                    record = {
+                        "id": permit_id,
+                        "city": city_name,
+                        "company": company_name,
+                        "representative": rep_name,
+                        "solicitor": rep_name,
+                        "rep": rep_name,
+                        "issueDate": issue_str,
+                        "expireDate": expire_str,
+                        "expirationDate": expire_str,
+                        "expires": expire_str,
+                        "matchedKeyword": str(get_attr(attrs, "permitType", "permit_type", "folder_type") or "construction"),
+                        "status": status,
+                    }
+                    records.append(record)
+                    city_retained += 1
 
-                        company_name = str(
-                            get_attr(attrs, "contractorName", "contractor_name", "applicantName", "applicant_name", "dbaname", "company_name")
-                            or "Unknown Contractor"
-                        )
-                        rep_name = str(get_attr(attrs, "applicantName", "applicant_name", "representative", "contractorName") or "N/A")
-
-                        record = {
-                            "id": permit_id,
-                            "city": city_name,
-                            "company": company_name,
-                            "representative": rep_name,
-                            "solicitor": rep_name,
-                            "rep": rep_name,
-                            "issueDate": issue_str,
-                            "expireDate": expire_str,
-                            "expirationDate": expire_str,
-                            "expires": expire_str,
-                            "matchedKeyword": str(get_attr(attrs, "permitType", "permit_type", "folder_type") or "construction"),
-                            "status": status,
-                        }
-                        records.append(record)
-                        city_retained += 1
-
-                    print(f"Retained {city_retained} valid records for {city_name}.")
+                print(f"Retained {city_retained} valid records for {city_name}.")
             except Exception as e:
                 print(f"Failed to query endpoint for {city_name}: {e}")
 

@@ -702,21 +702,7 @@
       "status": "ACTIVE"
     },
     {
-      "id": "COO-0-0-4177",
-      "city": "Coon Rapids",
-      "company": "Department Name:",
-      "representative": "Handled by:",
-      "solicitor": "Handled by:",
-      "rep": "Handled by:",
-      "issueDate": "2026-01-01",
-      "expireDate": "2027-01-01",
-      "expirationDate": "2027-01-01",
-      "expires": "2027-01-01",
-      "matchedKeyword": "solicitor-pdf",
-      "status": "ACTIVE"
-    },
-    {
-      "id": "COO-0-2-7500",
+      "id": "COO-0-2-3378",
       "city": "Coon Rapids",
       "company": "Information Classified as:\n\u2610 Public \u2610 Non-Public\n\u2610 Private \u2610 Protected Non-Public\n\u2610 Confidential",
       "representative": "Action:",
@@ -730,7 +716,7 @@
       "status": "ACTIVE"
     },
     {
-      "id": "COO-0-6-1906",
+      "id": "COO-0-6-3131",
       "city": "Coon Rapids",
       "company": "Remarks or basis for denial including Statute section:",
       "representative": "N/A",
@@ -744,7 +730,7 @@
       "status": "ACTIVE"
     },
     {
-      "id": "COO-0-9-9550",
+      "id": "COO-0-9-1349",
       "city": "Coon Rapids",
       "company": "Charges:\n\u2610 None\n\u2610 Photocopy: _____ pages x ____ cents = _______\n\u2610 Special Rate: __________(attach explanation)\n\u2610 Other: _______________ (attach explanation)",
       "representative": "Identity verified for private information:",
@@ -758,7 +744,7 @@
       "status": "ACTIVE"
     },
     {
-      "id": "COO-0-15-4781",
+      "id": "COO-0-15-9391",
       "city": "Coon Rapids",
       "company": "Authorized Signature:",
       "representative": "Date:",
