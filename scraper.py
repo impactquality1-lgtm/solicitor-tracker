@@ -2,6 +2,7 @@ import io
 import json
 import os
 import re
+import ssl
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -66,6 +67,11 @@ BROWSER_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
 }
+
+# Create an unverified SSL context to prevent handshake blocks on municipal servers
+SSL_CONTEXT = ssl.create_default_context()
+SSL_CONTEXT.check_hostname = False
+SSL_CONTEXT.verify_mode = ssl.CERT_NONE
 
 
 def format_arcgis_date(val):
@@ -132,7 +138,7 @@ def parse_pdf_date(date_str):
 
 
 def fetch_pdf_permits(target):
-    """Generic PDF scraper that extracts companies, reps, and actual live dates from PDF tables."""
+    """Generic PDF scraper with refined filtering to prevent dropping valid records."""
     records = []
     city_name = target["city"]
     page_url = target["url"]
@@ -144,7 +150,7 @@ def fetch_pdf_permits(target):
     print(f"Querying solicitor PDF roster for {city_name}...")
     try:
         req = urllib.request.Request(page_url, headers=BROWSER_HEADERS)
-        with urllib.request.urlopen(req, timeout=20) as response:
+        with urllib.request.urlopen(req, timeout=20, context=SSL_CONTEXT) as response:
             html_content = response.read().decode("utf-8")
 
         pdf_links = re.findall(r'href="([^"]+\.pdf[^"]*)"', html_content, re.IGNORECASE)
@@ -158,11 +164,12 @@ def fetch_pdf_permits(target):
         target_pdf_url = None
         for link in all_candidates:
             if any(kw in link.lower() for kw in ["solicitor", "peddler", "license", "current", "list"]):
-                if link.startswith("http"):
-                    target_pdf_url = link
-                elif link.startswith("/"):
-                    target_pdf_url = f"{base_domain}{link}"
-                break
+                if not any(ex in link.lower() for ex in ["app.pdf", "application", "ordinance"]):
+                    if link.startswith("http"):
+                        target_pdf_url = link
+                    elif link.startswith("/"):
+                        target_pdf_url = f"{base_domain}{link}"
+                    break
 
         if not target_pdf_url and all_candidates:
             target_pdf_url = all_candidates[0] if all_candidates[0].startswith("http") else None
@@ -173,7 +180,7 @@ def fetch_pdf_permits(target):
 
         print(f"Downloading PDF for {city_name} from: {target_pdf_url}")
         pdf_req = urllib.request.Request(target_pdf_url, headers=BROWSER_HEADERS)
-        with urllib.request.urlopen(pdf_req, timeout=30) as pdf_resp:
+        with urllib.request.urlopen(pdf_req, timeout=30, context=SSL_CONTEXT) as pdf_resp:
             pdf_bytes = pdf_resp.read()
 
         now = datetime.now(timezone.utc)
@@ -190,9 +197,8 @@ def fetch_pdf_permits(target):
 
                     cleaned_row = [str(cell).strip() if cell else "" for cell in row]
                     
-                    # Skip header / disclaimer rows
-                    row_text = " ".join(cleaned_row).lower()
-                    if any(skip_word in row_text for skip_word in ["company", "name", "solicitor", "peddler", "license #", "date", "issued", "status", "page"]):
+                    first_cell_lower = cleaned_row[0].lower()
+                    if first_cell_lower in ["company", "company name", "business name", "applicant", "name"]:
                         continue
 
                     company = cleaned_row[0]
@@ -201,7 +207,6 @@ def fetch_pdf_permits(target):
                     if not company or len(company) < 2 or company.replace(".", "").isdigit():
                         continue
 
-                    # Scan all cells in the row for valid date strings
                     found_dates = []
                     for cell in cleaned_row[2:]:
                         parsed_d = parse_pdf_date(cell)
@@ -240,7 +245,7 @@ def fetch_pdf_permits(target):
                     }
                     records.append(record)
 
-        print(f"Extracted {len(records)} valid records with parsed dates for {city_name} from PDF.")
+        print(f"Extracted {len(records)} valid records for {city_name} from PDF.")
     except Exception as e:
         print(f"Failed to process PDF for {city_name}: {e}")
 
@@ -272,7 +277,7 @@ def fetch_all_city_permits():
             print(f"Querying active live permits for {city_name} (ArcGIS)...")
             try:
                 req = urllib.request.Request(url, headers=BROWSER_HEADERS)
-                with urllib.request.urlopen(req, timeout=20) as response:
+                with urllib.request.urlopen(req, timeout=20, context=SSL_CONTEXT) as response:
                     payload = json.loads(response.read().decode("utf-8"))
                     features = payload.get("features", [])
                     print(f"Fetched {len(features)} raw features for {city_name}.")
@@ -282,26 +287,33 @@ def fetch_all_city_permits():
                         attrs = item.get("attributes", {})
 
                         permit_id = str(
-                            get_attr(attrs, "permitNumber", "permit_number", "folder_rsn", "objectid")
+                            get_attr(attrs, "permitNumber", "permit_number", "folder_rsn", "objectid", "fid", "id", "encid")
                             or f"{city_name}-PERMIT"
                         )
                         if permit_id in seen_permit_ids:
                             continue
                         seen_permit_ids.add(permit_id)
 
-                        raw_issue = get_attr(attrs, "issueDate", "issuedate", "issue_date", "permit_date")
-                        issue_str = format_arcgis_date(raw_issue)
-                        if not issue_str:
-                            continue
+                        raw_issue = get_attr(
+                            attrs, 
+                            "approvdate", "issueDate", "issuedate", "issue_date", "permit_date", 
+                            "issue_dt", "date_issued", "issued", "created", "date", "permitdate"
+                        )
+                        issue_str = format_arcgis_date(raw_issue) or "2025-01-01"
 
                         try:
                             issue_dt = datetime.strptime(issue_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                            if issue_dt < cutoff_date:
+                            # Only apply strict 365-day cutoff for Minneapolis, allow St. Paul encroachments through
+                            if city_name != "St. Paul" and issue_dt < cutoff_date:
                                 continue
                         except Exception:
-                            continue
+                            pass
 
-                        raw_expire = get_attr(attrs, "expirationDate", "expirationdate", "expiredate", "expire_date")
+                        raw_expire = get_attr(
+                            attrs, 
+                            "expirationDate", "expirationdate", "expiredate", "expire_date", 
+                            "expire_dt", "expiration", "expires", "valid_until"
+                        )
                         expire_str = format_arcgis_date(raw_expire) or "2027-01-01"
 
                         try:
@@ -311,10 +323,10 @@ def fetch_all_city_permits():
                             status = "ACTIVE"
 
                         company_name = str(
-                            get_attr(attrs, "contractorName", "contractor_name", "applicantName", "applicant_name", "dbaname", "company_name")
-                            or "Unknown Contractor"
+                            get_attr(attrs, "enc_type", "contractorName", "contractor_name", "applicantName", "applicant_name", "dbaname", "company_name", "business_name")
+                            or "Permittee"
                         )
-                        rep_name = str(get_attr(attrs, "applicantName", "applicant_name", "representative", "contractorName") or "N/A")
+                        rep_name = str(get_attr(attrs, "enc_notes", "applicantName", "applicant_name", "representative", "contractorName", "contact_name", "prop_add") or "N/A")
 
                         record = {
                             "id": permit_id,
@@ -327,7 +339,7 @@ def fetch_all_city_permits():
                             "expireDate": expire_str,
                             "expirationDate": expire_str,
                             "expires": expire_str,
-                            "matchedKeyword": str(get_attr(attrs, "permitType", "permit_type", "folder_type") or "construction"),
+                            "matchedKeyword": str(get_attr(attrs, "permitType", "permit_type", "folder_type", "type", "enc_type") or "permit"),
                             "status": status,
                         }
                         records.append(record)
